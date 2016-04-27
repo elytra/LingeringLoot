@@ -35,7 +35,7 @@ class LingeringLoot {
                 "items, player-caused drops, mob drops, and finally other.")
 
         fun configOptionSecs(category: String, name: String, default: Int): Int {
-            val r = 20 * config.get(category, name, default).getInt(default)
+            val r = (20 * config.get(category, name, default.toDouble()).getDouble(default.toDouble())).toInt()
             return if (r == MINECRAFT_LIFESPAN) FAKE_DEFAULT_LIFESPAN else r  // important to differentiate 6000 from -1
         }
 
