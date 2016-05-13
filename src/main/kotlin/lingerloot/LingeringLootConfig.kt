@@ -1,6 +1,7 @@
 package lingerloot
 
 import net.minecraft.item.Item
+import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.config.Configuration
 import java.io.File
 
@@ -38,7 +39,7 @@ class LingeringLootConfig(file: File) {
 
         config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")
         shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,snowball").string.split(",").
-                map{b -> Item.itemRegistry.getObject(b) as? Item }.filterNotNull().
+                map{b -> Item.itemRegistry.getObject(ResourceLocation(b))}.filterNotNull().
                 toSet()
         shitTierMods = config.get(shitTierCategory, "shit tier mods", "").string.split(",").
                 toSet()

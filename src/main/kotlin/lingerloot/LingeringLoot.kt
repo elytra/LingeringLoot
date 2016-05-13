@@ -1,24 +1,25 @@
 package lingerloot
 
-import cpw.mods.fml.common.Mod
-import cpw.mods.fml.common.event.FMLPreInitializationEvent
-import cpw.mods.fml.common.eventhandler.EventPriority
-import cpw.mods.fml.common.eventhandler.SubscribeEvent
-import cpw.mods.fml.common.registry.GameRegistry
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
 import net.minecraft.nbt.NBTTagByte
+import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
+import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.eventhandler.EventPriority
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
 val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
 val PLAYER_MINED_TAG = "PlayerMinedThisItem"
 val PLAYER_MINED_V: Byte = 1
+val B0: Byte = 0
 
 @Mod(modid = "LingeringLoot", version = "1.0")
 class LingeringLoot {
@@ -55,7 +56,7 @@ class EventHandler(val despawnTimes: DespawnTimes, val shitTier: Set<Item>, val 
             val item = itemDrop.entityItem.item
             itemDrop.lifespan =
                     if (despawnTimes.shitTier >= 0 &&
-                            (item in shitTier || GameRegistry.findUniqueIdentifierFor(item)?.modId in shitTierMods))
+                            (item in shitTier || ResourceLocation(item.registryName).resourceDomain in shitTierMods))
                         despawnTimes.shitTier
                     else
                         target
@@ -90,7 +91,7 @@ class EventHandler(val despawnTimes: DespawnTimes, val shitTier: Set<Item>, val 
         val entity = event.entity
         if (entity is EntityItem) {
             val compound = entity.entityItem.tagCompound
-            val target = if (compound?.getByte(PLAYER_MINED_TAG)?:0 == PLAYER_MINED_V) {
+            val target = if (compound?.getByte(PLAYER_MINED_TAG)?:B0 == PLAYER_MINED_V) {
                 compound.removeTag(PLAYER_MINED_TAG)
                 if (compound.hasNoTags())
                     entity.entityItem.tagCompound = null
