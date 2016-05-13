@@ -4,7 +4,6 @@ import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Item
 import net.minecraft.nbt.NBTTagByte
-import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
@@ -56,7 +55,7 @@ class EventHandler(val despawnTimes: DespawnTimes, val shitTier: Set<Item>, val 
             val item = itemDrop.entityItem.item
             itemDrop.lifespan =
                     if (despawnTimes.shitTier >= 0 &&
-                            (item in shitTier || ResourceLocation(item.registryName).resourceDomain in shitTierMods))
+                            (item in shitTier || item.registryName.resourceDomain in shitTierMods))
                         despawnTimes.shitTier
                     else
                         target
