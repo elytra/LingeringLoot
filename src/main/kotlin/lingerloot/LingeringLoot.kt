@@ -21,7 +21,7 @@ val PLAYER_MINED_TAG = "PlayerMinedThisItem"
 val PLAYER_MINED_V: Byte = 1
 val B0: Byte = 0
 
-@Mod(modid = "LingeringLoot", version = "1.0")
+@Mod(modid = "LingeringLoot", version = "1.0", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
