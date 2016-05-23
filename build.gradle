@@ -36,13 +36,21 @@ minecraft {
     // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
+repositories {
+    maven {
+        url = 'http://unascribed.com/maven/releases'
+    }
+}
+
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'com.unascribed:lambdanetwork:0.0.6'
 }
 
 shadowJar {
     relocate 'kotlin', 'lingerlootkot.kotlin'
     relocate 'org.jetbrains.annotations', 'lingerlootkot.jetbrains.annotations'
+    relocate 'com.unascribed.lambdanetwork', "lingerlootkot.unascribed.lambdanetwork"
     classifier ''
 }
 
@@ -52,8 +60,7 @@ reobf {
 
 tasks.build.dependsOn reobfShadowJar
 
-processResources
-{
+processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
