@@ -15,18 +15,14 @@ class JitterNotificationQueue() {
     fun tick() {
         tick++
 
-        val readyToJitters = ArrayList<EntityItem>(64)
-
         while (q.isNotEmpty() && tick >= q.peek().expectToJitter) {
             q.poll().ref.get().ifAlive()?.let { item ->
                 if (item.lifespan - serversideAge(item) > JITTER_TIME + 10)
                     prepareToDie(item) // not even close, throw it back in
                 else
-                    readyToJitters.add(item)
+                    LAMBDA_NETWORK.send().packet(GONNA_DESPAWN).with("id", item.entityId).toAllWatching(item)
             }
         }
-
-        readyToJitters.forEach { LAMBDA_NETWORK.send().packet(GONNA_DESPAWN).with("id", it.entityId).toAllWatching(it) }
     }
 }
 
