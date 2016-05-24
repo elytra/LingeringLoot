@@ -40,7 +40,7 @@ val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
             }.
         build()
 
-val JITTER_TIME = 200
+val JITTER_TIME = 300
 
 val rand = Random()
 
