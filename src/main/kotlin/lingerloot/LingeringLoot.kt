@@ -115,6 +115,8 @@ class EventHandler(config: LingeringLootConfig) {
     // highest priority so we minimize the chance of other code seeing our injected NBT
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onEntitySpawn(event: EntityJoinWorldEvent) {
+        if (event.entity.worldObj.isRemote) return
+
         val entity = event.entity
         if (entity is EntityItem) {
             val compound = entity.entityItem.tagCompound
