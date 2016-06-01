@@ -3,7 +3,7 @@ package lingerloot
 import net.minecraft.entity.item.EntityItem
 import net.minecraftforge.fml.relauncher.ReflectionHelper
 
-inline fun <T> MutableList<T>.filterInPlace(filter: (T)->Boolean) {
+inline fun <T> MutableIterable<T>.filterInPlace(filter: (T)->Boolean) {
     val it = iterator()
     while (it.hasNext())
         if (!filter(it.next()))

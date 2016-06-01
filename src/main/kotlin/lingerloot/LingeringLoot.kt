@@ -26,7 +26,7 @@ val PLAYER_MINED_TAG = "PlayerMinedThisItem"
 val PLAYER_MINED_V: Byte = 1
 val B0: Byte = 0
 
-val jitteringItems = LinkedList<WeakReference<EntityItem>>()
+val jitteringItems = HashSet<WeakReference<EntityItem>>()
 
 val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
@@ -81,9 +81,9 @@ class EventHandler(config: LingeringLootConfig) {
                         despawnTimes.shitTier
                     else
                         target
-
-            jitterSluice.prepareToDie(itemDrop)
         }
+
+        jitterSluice.prepareToDie(itemDrop)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
