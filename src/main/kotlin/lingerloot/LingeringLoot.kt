@@ -26,7 +26,7 @@ import java.util.*
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
 val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
 
-val jitteringItems = LinkedList<WeakReference<EntityItem>>()
+val jitteringItems = HashSet<WeakReference<EntityItem>>()
 
 val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
@@ -83,9 +83,9 @@ class EventHandler(config: LingeringLootConfig) {
                         despawnTimes.shitTier
                     else
                         target
-
-            jitterSluice.prepareToDie(itemDrop)
         }
+
+        jitterSluice.prepareToDie(itemDrop)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
