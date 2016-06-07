@@ -1,5 +1,8 @@
 package lingerloot
 
+import com.unascribed.lambdanetwork.DataType
+import com.unascribed.lambdanetwork.LambdaNetwork
+import cpw.mods.fml.common.FMLCommonHandler
 import cpw.mods.fml.common.Mod
 import cpw.mods.fml.common.event.FMLPreInitializationEvent
 import cpw.mods.fml.common.eventhandler.EventPriority
@@ -45,7 +48,9 @@ val rand = Random()
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
-        MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))))
+        val handler = EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg")))
+        MinecraftForge.EVENT_BUS.register(handler)
+        FMLCommonHandler.instance().bus().register(handler)
     }
 }
 
@@ -112,6 +117,8 @@ class EventHandler(config: LingeringLootConfig) {
     // highest priority so we minimize the chance of other code seeing our injected NBT
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onEntitySpawn(event: EntityJoinWorldEvent) {
+        if (event.entity.worldObj.isRemote) return
+
         val entity = event.entity
         if (entity is EntityItem) {
             val compound = entity.entityItem.tagCompound
