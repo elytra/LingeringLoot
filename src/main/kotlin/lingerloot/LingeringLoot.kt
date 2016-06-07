@@ -4,9 +4,10 @@ import com.unascribed.lambdanetwork.DataType
 import com.unascribed.lambdanetwork.LambdaNetwork
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.nbt.NBTTagByte
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.MathHelper
 import net.minecraftforge.common.MinecraftForge
+import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
@@ -22,9 +23,6 @@ import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
 val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
-val PLAYER_MINED_TAG = "PlayerMinedThisItem"
-val PLAYER_MINED_V: Byte = 1
-val B0: Byte = 0
 
 val jitteringItems = HashSet<WeakReference<EntityItem>>()
 
@@ -104,27 +102,24 @@ class EventHandler(config: LingeringLootConfig) {
         for (drop in event.drops) adjustDespawn(drop, target)
     }
 
+    var playerHarvested = mutableSetOf<ItemStack>()
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onHarvestDrops(event: HarvestDropsEvent) {
         if (! (event.harvester?.worldObj?.isRemote?:true))
-            if (event.harvester != null) // if player-harvested, inject NBT tag for EntityJoinWorldEvent
-                for (drop in event.drops) drop.setTagInfo(PLAYER_MINED_TAG, NBTTagByte(PLAYER_MINED_V))
+            if (event.harvester != null && event.harvester !is FakePlayer)
+                playerHarvested = event.drops.toMutableSet()
     }
 
-    // highest priority so we minimize the chance of other code seeing our injected NBT
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onEntitySpawn(event: EntityJoinWorldEvent) {
         if (event.entity.worldObj.isRemote) return
 
         val entity = event.entity
         if (entity is EntityItem) {
-            val compound = entity.entityItem.tagCompound
-            val target = if (compound?.getByte(PLAYER_MINED_TAG)?:B0 == PLAYER_MINED_V) {
-                compound.removeTag(PLAYER_MINED_TAG)
-                if (compound.hasNoTags())
-                    entity.entityItem.tagCompound = null
+            val target = if (playerHarvested.remove(entity.entityItem))
                 despawnTimes.playerMine
-            } else
+            else
                 despawnTimes.other
 
             adjustDespawn(entity, target)
