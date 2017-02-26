@@ -1,63 +1,51 @@
 package lingerloot
 
-import cpw.mods.fml.common.Mod
-import cpw.mods.fml.common.event.FMLPreInitializationEvent
-import cpw.mods.fml.common.eventhandler.EventPriority
-import cpw.mods.fml.common.eventhandler.SubscribeEvent
+import com.unascribed.lambdanetwork.DataType
+import com.unascribed.lambdanetwork.LambdaNetwork
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.item.Item
-import net.minecraft.nbt.NBTTagByte
+import net.minecraft.item.ItemStack
+import net.minecraft.util.math.MathHelper
 import net.minecraftforge.common.MinecraftForge
-import net.minecraftforge.common.config.Configuration
+import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
+import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.eventhandler.EventPriority
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
+import net.minecraftforge.fml.common.gameevent.TickEvent
+import net.minecraftforge.fml.relauncher.Side
+import java.lang.ref.WeakReference
+import java.util.*
 
-private val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
-private val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
-private val PLAYER_MINED_TAG = "PlayerMinedThisItem"
-private val PLAYER_MINED_V: Byte = 1
+val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
+val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
 
-@Mod(modid = "LingeringLoot", version = "1.0")
+val jitteringItems = HashSet<WeakReference<EntityItem>>()
+
+val GONNA_DESPAWN = "G"
+val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
+        packet(GONNA_DESPAWN).boundTo(Side.CLIENT).with(DataType.INT, "id").
+            handledOnMainThreadBy { entityPlayer, token ->
+                (entityPlayer.worldObj.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
+                    it.lifespan = it.age + JITTER_TIME
+                    jitteringItems += WeakReference(it)
+                }
+            }.
+        build()
+
+val JITTER_TIME = 300
+
+val rand = Random()
+
+@Mod(modid = "LingeringLoot", version = "1.0", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
-        val config = Configuration(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))
-
-        val timeCategory = "despawn times"
-        val shitTierCategory = "shit tier"
-        config.setCategoryComment(timeCategory,
-                "Despawn times are in seconds.  Minecraft's default is 300.  Use -1 to defer to less granular settings\n" +
-                "eg: player drops and player-killed mob drops are both types of mob drops, and player-caused drops.\n" +
-                "The order of precedence is: player drops, player-killed mob drops or player-mined items or player-thrown\n" +
-                "items, player-caused drops, mob drops, and finally other.")
-
-        fun configOptionSecs(category: String, name: String, default: Int): Int {
-            val r = (20 * config.get(category, name, default.toDouble()).getDouble(default.toDouble())).toInt()
-            return if (r == MINECRAFT_LIFESPAN) FAKE_DEFAULT_LIFESPAN else r  // important to differentiate 6000 from -1
-        }
-
-        val despawns = DespawnTimes(
-                configOptionSecs(timeCategory, "player drops", 3600),
-                configOptionSecs(timeCategory, "player-killed mob drops", -1),
-                configOptionSecs(timeCategory, "player-mined items", -1),
-                configOptionSecs(timeCategory, "mob drops", -1),
-                configOptionSecs(timeCategory, "player-thrown items", -1),
-                configOptionSecs(timeCategory, "player-caused drops", 1800),
-                configOptionSecs(timeCategory, "other", 900),
-                configOptionSecs(shitTierCategory, "shit despawn time", 300)
-        )
-
-        config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")
-        val shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,snowball").string.split(",").
-                map{b -> Item.itemRegistry.getObject(b) as? Item}.filterNotNull().
-                toSet()
-
-        if (config.hasChanged()) config.save()
-
-        MinecraftForge.EVENT_BUS.register(EventHandler(despawns, shitTier))
+        MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))))
     }
 }
 
@@ -66,35 +54,46 @@ private fun fallThrough(vararg vals: Int): Int {
     return FAKE_DEFAULT_LIFESPAN
 }
 
-class DespawnTimes private constructor(
-        val playerDrop: Int,  val playerKill: Int,
-        val playerMine: Int,  val mobDrop: Int,
-        val playerThrow: Int, val other: Int,
-        val shitTier: Int
-) {
-    constructor(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
-                playerCaused: Int, other: Int, shitTier: Int): this(
-            fallThrough(playerDrop, playerCaused, mobDrop, other), fallThrough(playerKill, playerCaused, mobDrop, other),
-            fallThrough(playerMine, playerCaused, other),          fallThrough(mobDrop, other),
-            fallThrough(playerThrow, playerCaused, other),         fallThrough(other),
-            shitTier
-    )
+class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
+                               playerCaused: Int, other: Int, val shitTier: Int) {
+    val playerDrop  = fallThrough(playerDrop, playerCaused, mobDrop, other)
+    val playerKill  = fallThrough(playerKill, playerCaused, mobDrop, other)
+    val playerMine  = fallThrough(playerMine, playerCaused, other)
+    val mobDrop     = fallThrough(mobDrop, other)
+    val playerThrow = fallThrough(playerThrow, playerCaused, other)
+    val other       = fallThrough(other)
 }
 
-class EventHandler(val despawnTimes: DespawnTimes, val shitTier: Set<Item>) {
-    private fun adjustDespawn(item: EntityItem, target: Int) {
-        if (item.lifespan == MINECRAFT_LIFESPAN)
-            item.lifespan = if (despawnTimes.shitTier >= 0 && item.entityItem.item in shitTier)
-                despawnTimes.shitTier else target
+class EventHandler(config: LingeringLootConfig) {
+    val despawnTimes = config.despawns
+    val shitTier= config.shitTier
+    val shitTierMods = config.shitTierMods
+    val jitterSluice by lazy { JitterNotificationQueue() }
+
+    private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
+        if (itemDrop.lifespan == MINECRAFT_LIFESPAN) {
+            val item = itemDrop.entityItem.item
+            itemDrop.lifespan =
+                    if (despawnTimes.shitTier >= 0 &&
+                            (item in shitTier || item.registryName.resourceDomain in shitTierMods))
+                        despawnTimes.shitTier
+                    else
+                        target
+        }
+
+        jitterSluice.prepareToDie(itemDrop)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onPlayerTossItem(event: ItemTossEvent) {
-        adjustDespawn(event.entityItem, despawnTimes.playerThrow)
+        if (! event.entityItem.worldObj.isRemote)
+            adjustDespawn(event.entityItem, despawnTimes.playerThrow)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onLivingDropsEvent(event: LivingDropsEvent) {
+        if (event.entity.worldObj.isRemote) return
+
         val target = if (event.entityLiving is EntityPlayer)
                 despawnTimes.playerDrop
             else if (event.source.entity is EntityPlayer)
@@ -103,27 +102,48 @@ class EventHandler(val despawnTimes: DespawnTimes, val shitTier: Set<Item>) {
         for (drop in event.drops) adjustDespawn(drop, target)
     }
 
+    var playerHarvested = mutableSetOf<ItemStack>()
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onHarvestDrops(event: HarvestDropsEvent) {
-        if (event.harvester != null) // if player-harvested, inject NBT tag for EntityJoinWorldEvent
-            for (drop in event.drops) drop.setTagInfo(PLAYER_MINED_TAG, NBTTagByte(PLAYER_MINED_V))
+        if (! (event.harvester?.worldObj?.isRemote?:true))
+            if (event.harvester != null && event.harvester !is FakePlayer)
+                playerHarvested = event.drops.toMutableSet()
     }
 
-    // highest priority so we minimize the chance of other code seeing our injected NBT
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onEntitySpawn(event: EntityJoinWorldEvent) {
+        if (event.entity.worldObj.isRemote) return
+
         val entity = event.entity
         if (entity is EntityItem) {
-            val compound = entity.entityItem.tagCompound
-            val target = if (compound?.getByte(PLAYER_MINED_TAG)?:0 == PLAYER_MINED_V) {
-                compound.removeTag(PLAYER_MINED_TAG)
-                if (compound.hasNoTags())
-                    entity.entityItem.tagCompound = null
+            val target = if (playerHarvested.remove(entity.entityItem))
                 despawnTimes.playerMine
-            } else
+            else
                 despawnTimes.other
 
             adjustDespawn(entity, target)
+        }
+    }
+
+    @SubscribeEvent
+    fun onServerTick(event: TickEvent.ServerTickEvent) {
+        if (event.phase == TickEvent.Phase.START) {
+            jitterSluice.tick()
+        }
+    }
+
+    @SubscribeEvent
+    fun onClientTick(event: TickEvent.ClientTickEvent) {
+        if (event.phase == TickEvent.Phase.START) {
+            jitteringItems.filterInPlace {
+                it.get().ifAlive()?.let { entity ->
+                    val ttl = Math.max(1, MathHelper.sqrt_double((entity.lifespan - entity.age).toDouble()).toInt())
+                    if (rand.nextInt(ttl) == 0)
+                        entity.hoverStart = (rand.nextDouble() * Math.PI * 2.0).toFloat();
+                    true
+                } ?: false
+            }
         }
     }
 }
