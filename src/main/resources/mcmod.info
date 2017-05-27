@@ -1,6 +1,6 @@
 [
 {
-  "modid": "LingeringLoot",
+  "modid": "lingeringloot",
   "name": "LingeringLoot",
   "description": "Custom item despawn lifespans for different situations.",
   "version": "${version}",

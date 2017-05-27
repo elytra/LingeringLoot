@@ -30,7 +30,7 @@ val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
         packet(GONNA_DESPAWN).boundTo(Side.CLIENT).with(DataType.INT, "id").
             handledOnMainThreadBy { entityPlayer, token ->
-                (entityPlayer.worldObj.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
+                (entityPlayer.entityWorld.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
                     it.lifespan = it.age + JITTER_TIME
                     jitteringItems += WeakReference(it)
                 }
@@ -41,7 +41,7 @@ val JITTER_TIME = 300
 
 val rand = Random()
 
-@Mod(modid = "LingeringLoot", version = "1.0", acceptableRemoteVersions="*")
+@Mod(modid = "lingeringloot", version = "2.5", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
@@ -86,13 +86,13 @@ class EventHandler(config: LingeringLootConfig) {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onPlayerTossItem(event: ItemTossEvent) {
-        if (! event.entityItem.worldObj.isRemote)
+        if (! event.entityItem.entityWorld.isRemote)
             adjustDespawn(event.entityItem, despawnTimes.playerThrow)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onLivingDropsEvent(event: LivingDropsEvent) {
-        if (event.entity.worldObj.isRemote) return
+        if (event.entity.entityWorld.isRemote) return
 
         val target = if (event.entityLiving is EntityPlayer)
                 despawnTimes.playerDrop
@@ -106,14 +106,14 @@ class EventHandler(config: LingeringLootConfig) {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onHarvestDrops(event: HarvestDropsEvent) {
-        if (! (event.harvester?.worldObj?.isRemote?:true))
+        if (! (event.harvester?.entityWorld?.isRemote?:true))
             if (event.harvester != null && event.harvester !is FakePlayer)
                 playerHarvested = event.drops.toMutableSet()
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onEntitySpawn(event: EntityJoinWorldEvent) {
-        if (event.entity.worldObj.isRemote) return
+        if (event.entity.entityWorld.isRemote) return
 
         val entity = event.entity
         if (entity is EntityItem) {
@@ -138,7 +138,7 @@ class EventHandler(config: LingeringLootConfig) {
         if (event.phase == TickEvent.Phase.START) {
             jitteringItems.filterInPlace {
                 it.get().ifAlive()?.let { entity ->
-                    val ttl = Math.max(1, MathHelper.sqrt_double((entity.lifespan - entity.age).toDouble()).toInt())
+                    val ttl = Math.max(1, MathHelper.sqrt((entity.lifespan - entity.age).toFloat()).toInt())
                     if (rand.nextInt(ttl) == 0)
                         entity.hoverStart = (rand.nextDouble() * Math.PI * 2.0).toFloat();
                     true
