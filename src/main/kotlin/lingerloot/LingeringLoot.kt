@@ -2,6 +2,7 @@ package lingerloot
 
 import com.unascribed.lambdanetwork.DataType
 import com.unascribed.lambdanetwork.LambdaNetwork
+import lingerloot.hardcore.HardcoreDespawnDispatcher
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
@@ -9,6 +10,7 @@ import net.minecraft.util.math.MathHelper
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
+import net.minecraftforge.event.entity.item.ItemExpireEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
@@ -23,6 +25,11 @@ import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
 val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
+
+val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDespawnTime(); e.extractAge() + 1}()
+val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
+
+val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.getPickupDelay()}()
 
 val jitteringItems = HashSet<WeakReference<EntityItem>>()
 
@@ -64,10 +71,13 @@ class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: I
     val other       = fallThrough(other)
 }
 
+val prescreen = HashSet<EntityItem>()
+
 class EventHandler(config: LingeringLootConfig) {
     val despawnTimes = config.despawns
     val shitTier= config.shitTier
     val shitTierMods = config.shitTierMods
+    val hardcore = config.hardcore
     val jitterSluice by lazy { JitterNotificationQueue() }
 
     private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
@@ -81,7 +91,7 @@ class EventHandler(config: LingeringLootConfig) {
                         target
         }
 
-        jitterSluice.prepareToDie(itemDrop)
+        prescreen.add(itemDrop)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -126,9 +136,20 @@ class EventHandler(config: LingeringLootConfig) {
         }
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    fun onItemDespawn(event: ItemExpireEvent) {
+        if (hardcore && !event.entity.entityWorld.isRemote)
+            HardcoreDespawnDispatcher.dispatch(event)
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onServerTick(event: TickEvent.ServerTickEvent) {
         if (event.phase == TickEvent.Phase.START) {
+            prescreen.removeAll {
+                correctForCreativeGive(it)
+                jitterSluice.prepareToDie(it)
+                true
+            }
             jitterSluice.tick()
         }
     }
@@ -140,7 +161,7 @@ class EventHandler(config: LingeringLootConfig) {
                 it.get().ifAlive()?.let { entity ->
                     val ttl = Math.max(1, MathHelper.sqrt((entity.lifespan - entity.age).toFloat()).toInt())
                     if (rand.nextInt(ttl) == 0)
-                        entity.hoverStart = (rand.nextDouble() * Math.PI * 2.0).toFloat();
+                        entity.hoverStart = (rand.nextDouble() * Math.PI * 2.0).toFloat()
                     true
                 } ?: false
             }

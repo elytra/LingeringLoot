@@ -19,7 +19,7 @@ apply plugin: 'kotlin'
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "2.5"
+version = "2.6_experimental"
 group = "lingerloot" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "LingeringLoot-1.11.2"
 
@@ -77,8 +77,16 @@ processResources {
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }
+
+    rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 sourceSets {
     main.java.srcDirs += 'src/main/kotlin'
+}
+
+jar {
+    manifest {
+        attributes 'FMLAT': 'lingeringloot_at.cfg'
+    }
 }

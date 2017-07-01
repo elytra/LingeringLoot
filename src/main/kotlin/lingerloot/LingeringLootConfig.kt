@@ -9,12 +9,15 @@ class LingeringLootConfig(file: File) {
     val despawns: DespawnTimes
     val shitTier: Set<Item>
     val shitTierMods: Set<String>
+    val hardcore: Boolean
 
     init {
         val config = Configuration(file)
 
         val timeCategory = "despawn times"
         val shitTierCategory = "shit tier"
+        val hardcoreCategory = "hardcore"
+
         config.setCategoryComment(timeCategory,
                 "Despawn times are in seconds.  Minecraft's default is 300.  Use -1 to defer to less granular settings\n" +
                         "eg: player drops and player-killed mob drops are both types of mob drops, and player-caused drops.\n" +
@@ -23,7 +26,8 @@ class LingeringLootConfig(file: File) {
 
         fun configOptionSecs(category: String, name: String, default: Int): Int {
             val r = (20 * config.get(category, name, default.toDouble()).getDouble(default.toDouble())).toInt()
-            return if (r == MINECRAFT_LIFESPAN) FAKE_DEFAULT_LIFESPAN else r  // important to differentiate 6000 from -1
+            return if (r == MINECRAFT_LIFESPAN) FAKE_DEFAULT_LIFESPAN else  // important to differentiate 6000 from -1
+            return if (r == CREATIVE_GIVE_DESPAWN_TICK) CREATIVE_GIVE_DISAMBIGUATE else r // differentiate /give fakeitems
         }
 
         despawns = DespawnTimes(
@@ -36,6 +40,8 @@ class LingeringLootConfig(file: File) {
                 configOptionSecs(timeCategory, "other", 900),
                 configOptionSecs(shitTierCategory, "shit despawn time", 300)
         )
+
+        hardcore = config.getBoolean("hardcore mode", hardcoreCategory, false, "additional challenge features")
 
         config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")
         shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,snowball").string.split(",").

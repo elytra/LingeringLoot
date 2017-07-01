@@ -4,7 +4,7 @@ import net.minecraft.entity.item.EntityItem
 import java.lang.ref.WeakReference
 import java.util.*
 
-class JitterNotificationQueue() {
+class JitterNotificationQueue {
     private val q = PriorityQueue<ExpectJitter>()
     private var tick = -1
 
@@ -17,7 +17,7 @@ class JitterNotificationQueue() {
 
         while (q.isNotEmpty() && tick >= q.peek().expectToJitter) {
             q.poll().ref.get().ifAlive()?.let { item ->
-                if (item.lifespan - serversideAge(item) > JITTER_TIME + 10)
+                if (item.lifespan - item.extractAge() > JITTER_TIME + 10)
                     prepareToDie(item) // not even close, throw it back in
                 else
                     LAMBDA_NETWORK.send().packet(GONNA_DESPAWN).with("id", item.entityId).toAllWatching(item)
@@ -28,7 +28,7 @@ class JitterNotificationQueue() {
 
 class ExpectJitter(tick: Int, item: EntityItem) : Comparable<ExpectJitter> {
     val ref = WeakReference(item)
-    val expectToJitter = tick + item.lifespan - serversideAge(item)
+    val expectToJitter = tick + item.lifespan - item.extractAge()
 
     override fun compareTo(other: ExpectJitter) = expectToJitter - other.expectToJitter
 }
