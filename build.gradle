@@ -12,7 +12,7 @@ buildscript {
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
     }
 }
 apply plugin: 'kotlin'
@@ -24,7 +24,7 @@ group = "lingerloot" // http://maven.apache.org/guides/mini/guide-naming-convent
 archivesBaseName = "LingeringLoot-1.11.2"
 
 minecraft {
-    version = "1.11.2-13.20.0.2201"
+    version = "1.11.2-13.20.1.2386"
     runDir = "run"
     
     // the mappings can be changed at any time, and must be in the following format.
@@ -32,26 +32,32 @@ minecraft {
     // stable_#            stables are built at the discretion of the MCP team.
     // Use non-default mappings at your own risk. they may not allways work.
     // simply re-run your setup task after changing the mappings to update your workspace.
-    mappings = "snapshot_20161220"
-    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+    mappings = "stable_32"
+//    mappings = "snapshot_20170624"
+    makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
 }
 
 repositories {
+    jcenter()
     maven {
         url = 'http://unascribed.com/maven/releases'
+    }
+    maven {
+        url "http://maven.shadowfacts.net/"
     }
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile group: "net.shadowfacts", name: "Forgelin", version: "1.5.0"
     compile 'com.unascribed:lambdanetwork:1.0.0'
+    shadow 'com.unascribed:lambdanetwork:1.0.0'
 }
 
 shadowJar {
-    relocate 'kotlin', 'lingerlootkot.kotlin'
     relocate 'org.jetbrains.annotations', 'lingerlootkot.jetbrains.annotations'
     relocate 'com.unascribed.lambdanetwork', "lingerlootkot.unascribed.lambdanetwork"
     classifier ''
+    configurations = [project.configurations.shadow]
 }
 
 reobf {
