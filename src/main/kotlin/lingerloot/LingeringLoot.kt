@@ -82,10 +82,10 @@ class EventHandler(config: LingeringLootConfig) {
 
     private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
         if (itemDrop.lifespan == MINECRAFT_LIFESPAN) {
-            val item = itemDrop.entityItem.item
+            val item = itemDrop.item.item
             itemDrop.lifespan =
                     if (despawnTimes.shitTier >= 0 &&
-                            (item in shitTier || item.registryName.resourceDomain in shitTierMods))
+                            (item in shitTier || item.registryName?.resourceDomain in shitTierMods))
                         despawnTimes.shitTier
                     else
                         target
@@ -106,7 +106,7 @@ class EventHandler(config: LingeringLootConfig) {
 
         val target = if (event.entityLiving is EntityPlayer)
                 despawnTimes.playerDrop
-            else if (event.source.entity is EntityPlayer)
+            else if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
                 despawnTimes.playerKill else despawnTimes.mobDrop
 
         for (drop in event.drops) adjustDespawn(drop, target)
@@ -127,7 +127,7 @@ class EventHandler(config: LingeringLootConfig) {
 
         val entity = event.entity
         if (entity is EntityItem) {
-            val target = if (playerHarvested.remove(entity.entityItem))
+            val target = if (playerHarvested.remove(entity.item))
                 despawnTimes.playerMine
             else
                 despawnTimes.other
