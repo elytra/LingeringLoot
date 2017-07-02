@@ -1,14 +1,7 @@
 package lingerloot.hardcore
 
-import com.google.common.collect.Lists
 import com.mojang.authlib.GameProfile
 import lingerloot.*
-import net.minecraft.block.BlockDirectional
-import net.minecraft.block.BlockPistonExtension
-import net.minecraft.block.BlockPistonMoving
-import net.minecraft.block.BlockSnow
-import net.minecraft.block.state.BlockPistonStructureHelper
-import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
@@ -16,7 +9,6 @@ import net.minecraft.item.ItemStack
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.EnumHand
 import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
 import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
@@ -27,6 +19,7 @@ val DROPS_PROFILE = GameProfile(UUID.randomUUID(), "The Drops")
 object HardcoreDespawnDispatcher {
     fun dispatch(event: ItemExpireEvent) {
         val entityItem = event.entityItem
+        if (entityItem.item.count <= 0) return
         val world = entityItem.entityWorld as? WorldServer ?: return
 
         if (correctForCreativeGive(entityItem) && entityItem.extractAge() < entityItem.lifespan) {
@@ -52,22 +45,23 @@ object HardcoreDespawnDispatcher {
         val drops = blockState.block.getDrops(world, pos, blockState, 0)
 
         placeBlock(world, pos, type, entityItem.item)
-        var remaining = entityItem.item.count - 1 // first block place attempt counts even if it was unplaceable
+        entityItem.item.shrink(1) // first block place attempt counts even if it was unplaceable
 
         val pushDirections = EnumFacing.values().toMutableList()
         Collections.shuffle(pushDirections)
 
-        while (remaining > 0 && pushDirections.isNotEmpty()) {
+        while (entityItem.item.count > 0 && pushDirections.isNotEmpty()) {
             val pushDirection = pushDirections.removeAt(0)
-            if (pistonDoMove(world, pos, pushDirection, true)) {
-                if (placeBlock(world, pos.add(pushDirection.directionVec), type, entityItem.item))
-                    remaining--
+            if (Blocks.PISTON.doMove(world, pos, pushDirection, true)) {
+                val pushInto = pos.offset(pushDirection)
+                world.setBlockToAir(pushInto)
+                placeBlock(world, pushInto, type, entityItem.item)
             }
         }
 
         world.getBlockState(pos).block
 
-        splitNumberEvenlyIsh(remaining, 3)
+        splitNumberEvenlyIsh(entityItem.item.count, 3)
             .map{EntityItemExploding(world, entityItem.posX, entityItem.posY, entityItem.posZ,
                 {val stack = entityItem.item.copy(); stack.count = it; stack}()
             )}
@@ -86,8 +80,20 @@ object HardcoreDespawnDispatcher {
     }
 
     fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack): Boolean {
-        return type.placeBlockAt(item, FakePlayer(world, DROPS_PROFILE), world, pos, EnumFacing.UP,
-                0f, 0f, 0f, type.block.blockState.baseState)
+        val player = FakePlayer(world, DROPS_PROFILE)
+
+        if (pos.y < 1 || pos.y >= world.minecraftServer?.buildLimit?:-25565)
+            return false
+
+        if (!type.block.canPlaceBlockAt(world, pos)) return false
+
+        if (type.placeBlockAt(item, FakePlayer(world, DROPS_PROFILE), world, pos, EnumFacing.UP,0f, 0f, 0f,
+                type.block.getStateForPlacement(world, pos, EnumFacing.UP, 0f, 0f, 0f,
+                    item.item.getMetadata(item.metadata), player, EnumHand.MAIN_HAND))) {
+            item.shrink(1)
+            return true
+        }
+        return false
     }
 }
 
