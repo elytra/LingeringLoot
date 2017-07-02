@@ -52,8 +52,10 @@ object HardcoreDespawnDispatcher {
 
         while (entityItem.item.count > 0 && pushDirections.isNotEmpty()) {
             val pushDirection = pushDirections.removeAt(0)
-            if (Blocks.PISTON.doMove(world, pos, pushDirection, true)) {
-                val pushInto = pos.offset(pushDirection)
+            val pushInto = pos.offset(pushDirection)
+
+            if (type.block.canPlaceBlockAt(world, pushInto) &&
+                    Blocks.PISTON.doMove(world, pos, pushDirection, true)) {
                 world.setBlockToAir(pushInto)
                 placeBlock(world, pushInto, type, entityItem.item)
             }
