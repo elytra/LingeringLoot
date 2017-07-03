@@ -2,10 +2,12 @@ package lingerloot
 
 import com.unascribed.lambdanetwork.DataType
 import com.unascribed.lambdanetwork.LambdaNetwork
+import lingerloot.hardcore.EntityItemExploding
 import lingerloot.hardcore.HardcoreDespawnDispatcher
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
+import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.MathHelper
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayer
@@ -19,6 +21,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
+import net.minecraftforge.fml.common.registry.EntityRegistry
 import net.minecraftforge.fml.relauncher.Side
 import java.lang.ref.WeakReference
 import java.util.*
@@ -30,6 +33,8 @@ val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDe
 val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
 
 val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.getPickupDelay()}()
+
+val ID_ENTITYITEMEXPLODING = 0
 
 val jitteringItems = HashSet<WeakReference<EntityItem>>()
 
@@ -47,12 +52,15 @@ val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
 val JITTER_TIME = 300
 
 val rand = Random()
+const val MODID = "lingeringloot"
 
-@Mod(modid = "lingeringloot", version = "2.5", acceptableRemoteVersions="*")
+@Mod(modid = MODID, version = "2.5", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
         MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))))
+        EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
+                ID_ENTITYITEMEXPLODING, this, 64, 15, true)
     }
 }
 
