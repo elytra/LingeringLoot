@@ -33,6 +33,7 @@ val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDe
 val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
 
 val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.getPickupDelay()}()
+val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.getPickupDelay()}()
 
 val ID_ENTITYITEMEXPLODING = 0
 
@@ -86,6 +87,7 @@ class EventHandler(config: LingeringLootConfig) {
     val shitTier= config.shitTier
     val shitTierMods = config.shitTierMods
     val hardcore = config.hardcore
+    val minedPickupDelay = config.minedPickupDelay
     val jitterSluice by lazy { JitterNotificationQueue() }
 
     private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
@@ -135,10 +137,12 @@ class EventHandler(config: LingeringLootConfig) {
 
         val entity = event.entity
         if (entity is EntityItem) {
-            val target = if (playerHarvested.remove(entity.item))
+            val target = if (playerHarvested.remove(entity.item)) {
+                if (minedPickupDelay != DEFAULT_PICKUP_DELAY) entity.setPickupDelay(minedPickupDelay)
                 despawnTimes.playerMine
-            else
+            } else {
                 despawnTimes.other
+            }
 
             adjustDespawn(entity, target)
         }

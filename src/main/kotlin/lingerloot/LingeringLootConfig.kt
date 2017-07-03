@@ -10,13 +10,14 @@ class LingeringLootConfig(file: File) {
     val shitTier: Set<Item>
     val shitTierMods: Set<String>
     val hardcore: Boolean
+    val minedPickupDelay: Int
 
     init {
         val config = Configuration(file)
 
         val timeCategory = "despawn times"
         val shitTierCategory = "shit tier"
-        val hardcoreCategory = "hardcore"
+        val bonusCategory = "bonus"
 
         config.setCategoryComment(timeCategory,
                 "Despawn times are in seconds.  Minecraft's default is 300.  Use -1 to defer to less granular settings\n" +
@@ -41,7 +42,9 @@ class LingeringLootConfig(file: File) {
                 configOptionSecs(shitTierCategory, "shit despawn time", 300)
         )
 
-        hardcore = config.getBoolean("hardcore mode", hardcoreCategory, false, "additional challenge features")
+        hardcore = config.getBoolean("hardcore mode", bonusCategory, false, "additional challenge features when items despawn (best used with dramatically reduced despawn times!)")
+
+        minedPickupDelay = config.getInt("pickup delay", bonusCategory, 5, 0, 10, "pickup delay for player-mined items in ticks (0-10, 0 is instant and 10 is no change)")
 
         config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")
         shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,snowball").string.split(",").
