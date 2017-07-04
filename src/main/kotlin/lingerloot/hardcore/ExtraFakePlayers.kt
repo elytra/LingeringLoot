@@ -1,6 +1,7 @@
 package lingerloot.hardcore
 
 import com.mojang.authlib.GameProfile
+import net.minecraft.item.ItemStack
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetHandlerPlayServer
 import net.minecraft.network.NetworkManager
@@ -18,8 +19,16 @@ object FakeNetworkManager: NetworkManager(EnumPacketDirection.CLIENTBOUND) {
 
 val DROPS_PROFILE = GameProfile(UUID.randomUUID(), "The Drops")
 
-fun makeFakerPlayer(world: WorldServer): FakePlayer {
-    val player = FakePlayer(world, DROPS_PROFILE)
-    NetHandlerPlayServer(null, FakeNetworkManager, player)
-    return player
+class FakerPlayer(world: WorldServer): FakePlayer(world, DROPS_PROFILE) {
+    var fakeHeldItem: ItemStack? = null
+
+    constructor(world: WorldServer, held: ItemStack): this(world) {
+        fakeHeldItem = held
+    }
+
+    init {
+        NetHandlerPlayServer(null, FakeNetworkManager, this)
+    }
+
+    override fun getHeldItemMainhand() = fakeHeldItem ?: super.getHeldItemMainhand()
 }

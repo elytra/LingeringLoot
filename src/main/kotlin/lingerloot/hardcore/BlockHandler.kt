@@ -20,11 +20,12 @@ fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlo
     if (rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
     if (entityItem.item.count <= 0) return
 
+    val fakePlayer = FakerPlayer(world)
     val pos = entityItem.position
-    makeFakerPlayer(world).interactionManager.tryHarvestBlock(pos)
+    fakePlayer.interactionManager.tryHarvestBlock(pos)
 
     val canPushBlocks =
-        when (getBlockForPlacement(world, pos, type, entityItem.item, makeFakerPlayer(world)).mobilityFlag) {
+        when (getBlockForPlacement(world, pos, type, entityItem.item, fakePlayer).mobilityFlag) {
             EnumPushReaction.NORMAL, EnumPushReaction.BLOCK -> true
             else -> false
         }
