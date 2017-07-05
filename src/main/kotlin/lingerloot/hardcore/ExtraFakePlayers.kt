@@ -1,6 +1,7 @@
 package lingerloot.hardcore
 
 import com.mojang.authlib.GameProfile
+import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetHandlerPlayServer
@@ -23,8 +24,9 @@ val DROPS_PROFILE = GameProfile(UUID.randomUUID(), "The Drops")
 class FakerPlayer(world: WorldServer): FakePlayer(world, DROPS_PROFILE) {
     var fakeHeldItem: ItemStack? = null
 
-    constructor(world: WorldServer, held: ItemStack): this(world) {
-        fakeHeldItem = held
+    constructor(world: WorldServer, holding: EntityItem): this(world) {
+        fakeHeldItem = holding.item
+        setPosition(holding.posX, holding.posY, holding.posZ)
     }
 
     init {
@@ -35,5 +37,17 @@ class FakerPlayer(world: WorldServer): FakePlayer(world, DROPS_PROFILE) {
         EnumHand.MAIN_HAND -> heldItemMainhand
         else -> super.getHeldItem(hand)
     }
+
     override fun getHeldItemMainhand() = fakeHeldItem ?: super.getHeldItemMainhand()
+
+    override fun setHeldItem(hand: EnumHand, stack: ItemStack) = when (hand) {
+        EnumHand.MAIN_HAND -> fakeHeldItem = stack
+        else -> super.setHeldItem(hand, stack)
+    }
+
+    fun randomLook() {
+        rotationPitch = -(rand.nextDouble() * 90).toFloat()
+        rotationYawHead = (rand.nextDouble() * 360).toFloat()
+        rotationYaw = rotationYawHead
+    }
 }

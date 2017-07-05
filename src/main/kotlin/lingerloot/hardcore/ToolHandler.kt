@@ -10,7 +10,7 @@ import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
 fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent) {
-    val fakePlayer = FakerPlayer(world, entityItem.item)
+    val fakePlayer = FakerPlayer(world, entityItem)
     val thisLayer = blocksIntersectingSmallEntity(entityItem, false) // Are entity items supposed to have a
                 // cylindrical bounding box?  Using cylindrical math resulted in getting stuck on corner edges
 
