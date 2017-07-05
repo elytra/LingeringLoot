@@ -20,6 +20,7 @@ fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item) {
             return
     }
 
+    entityItem.item.shrink(1)
     scatterRemainderToTheWinds(world, entityItem)
 }
 
