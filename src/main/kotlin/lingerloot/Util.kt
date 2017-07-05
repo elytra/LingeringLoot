@@ -36,18 +36,8 @@ fun spam(pre: String, entityItem: EntityItem) {
 
 }
 
-/**
- * attempts to detect /give and creative-mode-dropped items to restore the expected 1 minute despawn timer
- * @return whether change was required
- */
-fun correctForCreativeGive(item: EntityItem): Boolean {
-    if (item.extractAge() == CREATIVE_GIVE_DESPAWN_TICK && item.getPickupDelay() == 39) {
-        item.lifespan = FAKE_DEFAULT_LIFESPAN
-        return true
-    }
-
-    return false
-}
+fun detectCreativeGiveSecondTick(item: EntityItem) =
+        item.extractAge() == CREATIVE_GIVE_DESPAWN_TICK && item.getPickupDelay() == 39
 
 fun square(x: Double) = x*x
 

@@ -39,6 +39,7 @@ class LingeringLootConfig(file: File) {
                 configOptionSecs(timeCategory, "player-thrown items", -1),
                 configOptionSecs(timeCategory, "player-caused drops", 1800),
                 configOptionSecs(timeCategory, "other", 900),
+                configOptionSecs(timeCategory, "creative drops and /give", 60),
                 configOptionSecs(shitTierCategory, "shit despawn time", 300)
         )
 

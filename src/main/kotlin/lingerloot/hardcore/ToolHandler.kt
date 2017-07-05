@@ -17,7 +17,12 @@ fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: 
     (thisLayer + thisLayer.map{it.down()}).forEach {
         if (world.getBlockState(it).getCollisionBoundingBox(world, it) != NULL_AABB &&
                 attemptToolUse(world, entityItem, type, fakePlayer, it)) {
-            extendToolTime(event)
+            if (entityItem.item.count > 1) {
+                scatterRemainderToTheWinds(world, entityItem)
+            } else {
+                extendToolTime(event)
+                entityItem.jumpAround()
+            }
             return
         }
     }

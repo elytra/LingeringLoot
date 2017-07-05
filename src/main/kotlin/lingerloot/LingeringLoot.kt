@@ -31,6 +31,7 @@ val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further sub
 
 val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDespawnTime(); e.extractAge() + 1}()
 val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
+val CREATIVE_LIFESPAN = MINECRAFT_LIFESPAN - CREATIVE_GIVE_DESPAWN_TICK
 
 val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.getPickupDelay()}()
 val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.getPickupDelay()}()
@@ -71,13 +72,14 @@ private fun fallThrough(vararg vals: Int): Int {
 }
 
 class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
-                               playerCaused: Int, other: Int, val shitTier: Int) {
+                               playerCaused: Int, other: Int, creative: Int, val shitTier: Int) {
     val playerDrop  = fallThrough(playerDrop, playerCaused, mobDrop, other)
     val playerKill  = fallThrough(playerKill, playerCaused, mobDrop, other)
     val playerMine  = fallThrough(playerMine, playerCaused, other)
     val mobDrop     = fallThrough(mobDrop, other)
     val playerThrow = fallThrough(playerThrow, playerCaused, other)
     val other       = fallThrough(other)
+    val creative    = fallThrough(creative, CREATIVE_LIFESPAN)
 }
 
 val prescreen = HashSet<EntityItem>()
@@ -164,6 +166,15 @@ class EventHandler(config: LingeringLootConfig) {
             }
             jitterSluice.tick()
         }
+    }
+
+    /**
+     * attempts to detect /give and creative-mode-dropped items to restore the expected 1 minute despawn timer
+     * @return whether change was required
+     */
+    fun correctForCreativeGive(item: EntityItem) {
+        if (detectCreativeGiveSecondTick(item))
+            item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + despawnTimes.creative
     }
 
     @SubscribeEvent

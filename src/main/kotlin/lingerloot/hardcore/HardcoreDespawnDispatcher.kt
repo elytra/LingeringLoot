@@ -15,7 +15,7 @@ object HardcoreDespawnDispatcher {
         if (entityItem.item.count <= 0) return
         val world = entityItem.entityWorld as? WorldServer ?: return
 
-        if (correctForCreativeGive(entityItem) && entityItem.extractAge() < entityItem.lifespan) {
+        if (detectCreativeGiveSecondTick(entityItem)) {
             event.isCanceled = true
             return
         }
