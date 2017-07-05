@@ -29,7 +29,6 @@ fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item) {
     if (!actionTaken) {
         fakePlayer.randomLook()
         fakePlayer.interactionManager.processRightClick(fakePlayer, world, fakePlayer.heldItemMainhand, EnumHand.MAIN_HAND)
-        type.onItemRightClick(world, fakePlayer, EnumHand.MAIN_HAND).type
     }
 
     if (fakePlayer.heldItemMainhand == entityItem.item && fakePlayer.heldItemMainhand.count == initialCount)
