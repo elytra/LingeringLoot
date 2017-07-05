@@ -14,7 +14,7 @@ fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: 
     val thisLayer = blocksIntersectingSmallEntity(entityItem, false) // Are entity items supposed to have a
                 // cylindrical bounding box?  Using cylindrical math resulted in getting stuck on corner edges
 
-    (thisLayer + thisLayer.map{it.add(0, -1, 0)}).forEach {
+    (thisLayer + thisLayer.map{it.down()}).forEach {
         if (world.getBlockState(it).getCollisionBoundingBox(world, it) != NULL_AABB &&
                 attemptToolUse(world, entityItem, type, fakePlayer, it)) {
             extendToolTime(event)
@@ -35,7 +35,6 @@ fun attemptToolUse(world: WorldServer, entityItem: EntityItem, type: ItemTool, f
 
     if (type.getToolClasses(entityItem.item).any {blockState.block.isToolEffective(it, blockState)}) {
         if (fakePlayer.interactionManager.tryHarvestBlock(blockPos)) {
-            entityItem.item.onBlockDestroyed(world, blockState, blockPos, fakePlayer)
             return true
         }
     }

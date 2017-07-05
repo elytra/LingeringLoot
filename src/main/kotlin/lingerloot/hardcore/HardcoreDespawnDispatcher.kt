@@ -4,6 +4,7 @@ import lingerloot.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemTool
 import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
@@ -41,4 +42,21 @@ fun EntityItem.jumpAround() {
     this.posX += 3*this.motionX
     this.posY += 3*this.motionY
     this.posZ += 3*this.motionZ
+}
+
+
+/**
+ * split stack into up to 3 stacks and send them jumping
+ * (never call this if you cancel the despawn event)
+ */
+fun scatterRemainderToTheWinds(world: WorldServer, entityItem: EntityItem) {
+    splitNumberEvenlyIsh(entityItem.item.count, 3)
+        .map{EntityItemExploding(world, entityItem.posX, entityItem.posY, entityItem.posZ,
+            {val stack = entityItem.item.copy(); stack.count = it; stack}()
+        )}
+        .forEach {
+            it.jumpAround()
+            it.lifespan = 20 + rand.nextInt(3*20) // 1-4 seconds
+            world.spawnEntity(it)
+        }
 }

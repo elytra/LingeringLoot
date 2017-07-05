@@ -6,6 +6,7 @@ import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetHandlerPlayServer
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
+import net.minecraft.util.EnumHand
 import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.FakePlayer
 import java.util.*
@@ -30,5 +31,9 @@ class FakerPlayer(world: WorldServer): FakePlayer(world, DROPS_PROFILE) {
         NetHandlerPlayServer(null, FakeNetworkManager, this)
     }
 
+    override fun getHeldItem(hand: EnumHand?) = when(hand) {
+        EnumHand.MAIN_HAND -> heldItemMainhand
+        else -> super.getHeldItem(hand)
+    }
     override fun getHeldItemMainhand() = fakeHeldItem ?: super.getHeldItemMainhand()
 }

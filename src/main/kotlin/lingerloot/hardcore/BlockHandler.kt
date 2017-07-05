@@ -48,15 +48,7 @@ fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlo
         }
     }
 
-    splitNumberEvenlyIsh(entityItem.item.count, 3)
-            .map{EntityItemExploding(world, entityItem.posX, entityItem.posY, entityItem.posZ,
-                    {val stack = entityItem.item.copy(); stack.count = it; stack}()
-            )}
-            .forEach {
-                it.jumpAround()
-                it.lifespan = 20 + rand.nextInt(3*20) // 1-4 seconds
-                world.spawnEntity(it)
-            }
+    scatterRemainderToTheWinds(world, entityItem)
 }
 
 fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack): Boolean {
