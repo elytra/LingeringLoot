@@ -14,13 +14,13 @@ fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item) {
     val thisLayer = blocksIntersectingSmallEntity(entityItem, true)
     val initialCount = fakePlayer.heldItemMainhand.count
 
-    (thisLayer + thisLayer.map{it.down()}).forEach {
-        attemptUseStackOnBlock(world, type, fakePlayer, it)
+    for(pos in (thisLayer + thisLayer.map{it.down()})) {
+        attemptUseStackOnBlock(world, type, fakePlayer, pos)
         if (fakePlayer.heldItemMainhand.isEmpty ||
                 fakePlayer.heldItemMainhand.itemDamage > fakePlayer.heldItemMainhand.maxDamage)
             return
         if (fakePlayer.heldItemMainhand.count < initialCount)
-            return@forEach
+            break
     }
 
     if (fakePlayer.heldItemMainhand.count == initialCount)
