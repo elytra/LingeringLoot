@@ -65,4 +65,11 @@ class FakerPlayer(world: WorldServer, val holding: EntityItem?): FakePlayer(worl
         setPosition(x, y, z) // there shall be no update!
         holding.ifAlive()?.setPositionAndUpdate(x, y, z)
     }
+
+    /**
+     * the fakest player must be a sneaky player
+     */
+    override fun isSneaking(): Boolean {
+        return true
+    }
 }
