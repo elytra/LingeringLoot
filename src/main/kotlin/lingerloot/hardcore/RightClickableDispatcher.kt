@@ -17,7 +17,7 @@ fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item) {
     var actionTaken = false
 
     for(pos in (thisLayer + thisLayer.map{it.down()})) {
-        if (attemptUseStackOnBlock(world, fakePlayer, pos) != EnumActionResult.PASS)
+        if (attemptUseStackOnBlock(world, fakePlayer, pos) == EnumActionResult.SUCCESS)
             actionTaken = true
         if (fakePlayer.heldItemMainhand.isEmpty ||
                 fakePlayer.heldItemMainhand.itemDamage > fakePlayer.heldItemMainhand.maxDamage)
