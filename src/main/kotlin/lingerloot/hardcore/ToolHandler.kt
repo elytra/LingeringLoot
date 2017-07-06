@@ -1,6 +1,6 @@
 package lingerloot.hardcore
 
-import lingerloot.blocksIntersectingSmallEntity
+import lingerloot.blockAreaOfEffectForEntityAirLast
 import net.minecraft.block.Block.NULL_AABB
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemTool
@@ -11,10 +11,10 @@ import net.minecraftforge.event.entity.item.ItemExpireEvent
 
 fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent) {
     val fakePlayer = FakerPlayer(world, entityItem)
-    val thisLayer = blocksIntersectingSmallEntity(entityItem, false) // Are entity items supposed to have a
-                // cylindrical bounding box?  Using cylindrical math resulted in getting stuck on corner edges
 
-    (thisLayer + thisLayer.map{it.down()}).forEach {
+    // Are entity items supposed to have a cylindrical bounding box?
+    // Using cylindrical math resulted in getting stuck on corner edges
+    blockAreaOfEffectForEntityAirLast(world, entityItem, false).forEach {
         if (world.getBlockState(it).getCollisionBoundingBox(world, it) != NULL_AABB &&
                 attemptToolUse(world, entityItem, type, fakePlayer, it)) {
             if (entityItem.item.count > 1) {
@@ -27,7 +27,7 @@ fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: 
         }
     }
 
-    attemptUseStack(world, entityItem, type) // one last chance to do something interesting, for some mod tools
+    attemptUseStack(world, entityItem, type, event) // one last chance to do something interesting, for some mod tools
 }
 
 fun extendToolTime(event: ItemExpireEvent) {

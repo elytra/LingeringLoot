@@ -1,7 +1,6 @@
 package lingerloot.hardcore
 
 import lingerloot.rand
-import lingerloot.splitNumberEvenlyIsh
 import net.minecraft.block.material.EnumPushReaction
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityItem
@@ -20,7 +19,7 @@ fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlo
     if (rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
     if (entityItem.item.count <= 0) return
 
-    val fakePlayer = FakerPlayer(world)
+    val fakePlayer = FakerPlayer(world, entityItem)
     val pos = entityItem.position
     fakePlayer.interactionManager.tryHarvestBlock(pos)
 

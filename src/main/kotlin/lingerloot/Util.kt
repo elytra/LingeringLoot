@@ -2,7 +2,9 @@ package lingerloot
 
 import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityItem
+import net.minecraft.init.Blocks
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.WorldServer
 import net.minecraftforge.fml.relauncher.ReflectionHelper
 
 inline fun <T> MutableIterable<T>.filterInPlace(filter: (T)->Boolean) {
@@ -63,4 +65,14 @@ fun blocksIntersectingSmallEntity(entity: Entity, cylinder: Boolean): List<Block
             if (farCorner) entity.position.add(sigOffX, 0, sigOffZ) else null
     ).filterNotNull()
     .sortedBy {square(entity.posX - (it.x + .5)) + square(entity.posZ - (it.z + .5))}
+}
+
+/**
+ * returns a list containing intersecting blocks on this level followed by one level below,
+ * but with any AIR sorted to the end
+ */
+fun blockAreaOfEffectForEntityAirLast(world: WorldServer, entity: Entity, cylinder: Boolean): List<BlockPos> {
+    val topLayer = blocksIntersectingSmallEntity(entity, cylinder)
+    val filtered = (topLayer + topLayer.map{it.down()}).partition{!world.isAirBlock(it)}
+    return filtered.first + filtered.second
 }

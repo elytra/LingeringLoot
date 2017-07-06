@@ -2,10 +2,7 @@ package lingerloot.hardcore
 
 import lingerloot.*
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.item.Item
-import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemTool
+import net.minecraft.item.*
 import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
@@ -30,7 +27,7 @@ object HardcoreDespawnDispatcher {
         when (type) {
             is ItemBlock -> placeAndSplitBlock(world, entityItem, type)
             is ItemTool -> toolTime(world, entityItem, type, event)
-            is Item -> attemptUseStack(world, entityItem, type)
+            is Item -> attemptUseStack(world, entityItem, type, event)
         }
     }
 }
