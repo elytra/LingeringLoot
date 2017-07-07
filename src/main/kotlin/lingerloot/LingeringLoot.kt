@@ -8,7 +8,6 @@ import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
-import net.minecraft.util.math.MathHelper
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
@@ -17,13 +16,13 @@ import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
 import net.minecraftforge.fml.common.Mod
+import net.minecraftforge.fml.common.SidedProxy
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
 import net.minecraftforge.fml.relauncher.Side
-import java.lang.ref.WeakReference
 import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
@@ -38,7 +37,7 @@ val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay();
 
 val ID_ENTITYITEMEXPLODING = 0
 
-val jitteringItems = HashSet<WeakReference<EntityItem>>()
+val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
 
 val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
@@ -46,7 +45,7 @@ val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
             handledOnMainThreadBy { entityPlayer, token ->
                 (entityPlayer.entityWorld.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
                     it.lifespan = it.age + JITTER_TIME
-                    jitteringItems += WeakReference(it)
+                    jitteringItems += it
                 }
             }.
         build()
@@ -56,20 +55,22 @@ val JITTER_TIME = 300
 val rand = Random()
 const val MODID = "lingeringloot"
 
-@Mod(modid = MODID, version = "2.5", acceptableRemoteVersions="*")
+@SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
+
+@Mod(modid = MODID, version = "3.0", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
         MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))))
+
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
+
+        proxy?.preInit(event)
     }
 }
 
-private fun fallThrough(vararg vals: Int): Int {
-    for (i in vals) if (i >= 0) return i
-    return FAKE_DEFAULT_LIFESPAN
-}
+private fun fallThrough(vararg vals: Int) = vals.firstOrNull{it >= 0} ?: FAKE_DEFAULT_LIFESPAN
 
 class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
                                playerCaused: Int, other: Int, creative: Int, val shitTier: Int) {
@@ -177,17 +178,32 @@ class EventHandler(config: LingeringLootConfig) {
             item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + despawnTimes.creative
     }
 
+    var lastPartialTick = 0f
+
     @SubscribeEvent
-    fun onClientTick(event: TickEvent.ClientTickEvent) {
+    fun onClientRenderTick(event: TickEvent.RenderTickEvent) {
         if (event.phase == TickEvent.Phase.START) {
+            val delta = event.renderTickTime - lastPartialTick
+            lastPartialTick = event.renderTickTime
+
             jitteringItems.filterInPlace {
-                it.get().ifAlive()?.let { entity ->
-                    val ttl = Math.max(1, MathHelper.sqrt((entity.lifespan - entity.age).toFloat()).toInt())
-                    if (rand.nextInt(ttl) == 0)
-                        entity.hoverStart = (rand.nextDouble() * Math.PI * 2.0).toFloat()
+                it?.ifAlive()?.let { entity ->
+                    val progress =
+                        Math.min(JITTER_TIME, Math.max(0,
+                            JITTER_TIME - entity.lifespan + entity.age
+                        )).toDouble()/JITTER_TIME
+                    val progressOnACurve = square(progress).toFloat()
+                    entity.hoverStart += delta * (.2f-1.5f*progressOnACurve)
                     true
                 } ?: false
             }
+        }
+    }
+
+    @SubscribeEvent
+    fun onClientTick(event: TickEvent.ClientTickEvent) {
+        if (event.phase == TickEvent.Phase.START) {
+            lastPartialTick--
         }
     }
 }
