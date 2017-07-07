@@ -56,7 +56,7 @@ fun attemptUseStack(cfg: LingeringLootConfig, world: WorldServer, entityItem: En
 
     when(type) {
         Items.ENDER_PEARL -> {
-            event.extraLife = 100
+            event.extraLife = 120
             event.isCanceled = true
         }
         else -> scatterRemainderToTheWinds(world, entityItem)
