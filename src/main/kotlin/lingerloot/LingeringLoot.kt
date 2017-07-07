@@ -37,18 +37,15 @@ val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay();
 
 val ID_ENTITYITEMEXPLODING = 0
 
-val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
-
 val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
         packet(GONNA_DESPAWN).boundTo(Side.CLIENT).with(DataType.INT, "id").
             handledOnMainThreadBy { entityPlayer, token ->
                 (entityPlayer.entityWorld.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
                     it.lifespan = it.age + JITTER_TIME
-                    jitteringItems += it
                 }
-            }.
-        build()
+            }
+        .build()
 
 val JITTER_TIME = 300
 
@@ -176,34 +173,5 @@ class EventHandler(config: LingeringLootConfig) {
     fun correctForCreativeGive(item: EntityItem) {
         if (detectCreativeGiveSecondTick(item))
             item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + despawnTimes.creative
-    }
-
-    var lastPartialTick = 0f
-
-    @SubscribeEvent
-    fun onClientRenderTick(event: TickEvent.RenderTickEvent) {
-        if (event.phase == TickEvent.Phase.START) {
-            val delta = event.renderTickTime - lastPartialTick
-            lastPartialTick = event.renderTickTime
-
-            jitteringItems.filterInPlace {
-                it?.ifAlive()?.let { entity ->
-                    val progress =
-                        Math.min(JITTER_TIME, Math.max(0,
-                            JITTER_TIME - entity.lifespan + entity.age
-                        )).toDouble()/JITTER_TIME
-                    val progressOnACurve = square(progress).toFloat()
-                    entity.hoverStart += delta * (.2f-1.5f*progressOnACurve)
-                    true
-                } ?: false
-            }
-        }
-    }
-
-    @SubscribeEvent
-    fun onClientTick(event: TickEvent.ClientTickEvent) {
-        if (event.phase == TickEvent.Phase.START) {
-            lastPartialTick--
-        }
     }
 }
