@@ -28,12 +28,21 @@ fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item, even
             break
     }
 
-    if (!actionTaken) {
-        when (type) {
-            is ItemBucket -> fakePlayer.lookDown()
-            else -> fakePlayer.randomLook()
+    for (i in (1..3)) {
+        fakePlayer.randomLook()
+        if (EnumActionResult.SUCCESS == fakePlayer.interactionManager.processRightClick(
+                fakePlayer, world, fakePlayer.heldItemMainhand, EnumHand.MAIN_HAND
+        )) {
+            actionTaken = true
+            break
         }
-        fakePlayer.interactionManager.processRightClick(fakePlayer, world, fakePlayer.heldItemMainhand, EnumHand.MAIN_HAND)
+    }
+
+    if (!actionTaken) {
+        fakePlayer.lookDown()
+        fakePlayer.interactionManager.processRightClick(
+            fakePlayer, world, fakePlayer.heldItemMainhand, EnumHand.MAIN_HAND
+        )
     }
 
     if (fakePlayer.heldItemMainhand == entityItem.item && fakePlayer.heldItemMainhand.count == initialCount)
