@@ -82,21 +82,16 @@ class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: I
 
 val prescreen = HashSet<EntityItem>()
 
-class EventHandler(config: LingeringLootConfig) {
-    val despawnTimes = config.despawns
-    val shitTier= config.shitTier
-    val shitTierMods = config.shitTierMods
-    val hardcore = config.hardcore
-    val minedPickupDelay = config.minedPickupDelay
+class EventHandler(val cfg: LingeringLootConfig) {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
     private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
         if (itemDrop.lifespan == MINECRAFT_LIFESPAN) {
             val item = itemDrop.item.item
             itemDrop.lifespan =
-                    if (despawnTimes.shitTier >= 0 &&
-                            (item in shitTier || item.registryName?.resourceDomain in shitTierMods))
-                        despawnTimes.shitTier
+                    if (cfg.despawns.shitTier >= 0 &&
+                            (item in cfg.shitTier || item.registryName?.resourceDomain in cfg.shitTierMods))
+                        cfg.despawns.shitTier
                     else
                         target
         }
@@ -107,7 +102,7 @@ class EventHandler(config: LingeringLootConfig) {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onPlayerTossItem(event: ItemTossEvent) {
         if (! event.entityItem.entityWorld.isRemote)
-            adjustDespawn(event.entityItem, despawnTimes.playerThrow)
+            adjustDespawn(event.entityItem, cfg.despawns.playerThrow)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -115,9 +110,9 @@ class EventHandler(config: LingeringLootConfig) {
         if (event.entity.entityWorld.isRemote) return
 
         val target = if (event.entityLiving is EntityPlayer)
-                despawnTimes.playerDrop
+                cfg.despawns.playerDrop
             else if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
-                despawnTimes.playerKill else despawnTimes.mobDrop
+                cfg.despawns.playerKill else cfg.despawns.mobDrop
 
         for (drop in event.drops) adjustDespawn(drop, target)
     }
@@ -138,10 +133,10 @@ class EventHandler(config: LingeringLootConfig) {
         val entity = event.entity
         if (entity is EntityItem) {
             val target = if (playerHarvested.remove(entity.item)) {
-                if (minedPickupDelay != DEFAULT_PICKUP_DELAY) entity.setPickupDelay(minedPickupDelay)
-                despawnTimes.playerMine
+                if (cfg.minedPickupDelay != DEFAULT_PICKUP_DELAY) entity.setPickupDelay(cfg.minedPickupDelay)
+                cfg.despawns.playerMine
             } else {
-                despawnTimes.other
+                cfg.despawns.other
             }
 
             adjustDespawn(entity, target)
@@ -150,8 +145,8 @@ class EventHandler(config: LingeringLootConfig) {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onItemDespawn(event: ItemExpireEvent) {
-        if (hardcore && !event.entity.entityWorld.isRemote)
-            HardcoreDespawnDispatcher.dispatch(event)
+        if (cfg.hardcore && !event.entity.entityWorld.isRemote)
+            HardcoreDespawnDispatcher.dispatch(cfg, event)
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -172,6 +167,6 @@ class EventHandler(config: LingeringLootConfig) {
      */
     fun correctForCreativeGive(item: EntityItem) {
         if (detectCreativeGiveSecondTick(item))
-            item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + despawnTimes.creative
+            item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + cfg.despawns.creative
     }
 }

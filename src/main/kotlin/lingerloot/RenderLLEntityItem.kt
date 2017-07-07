@@ -12,7 +12,7 @@ import net.minecraft.util.math.MathHelper
 class RenderLLEntityItem(renderManager: RenderManager, item: RenderItem): RenderEntityItem(renderManager, item) {
     override fun transformModelCount(itemIn: EntityItem, x: Double, y: Double, z: Double, partialTicks: Float, model: IBakedModel): Int {
         val itemstack = itemIn.item
-        val item = itemstack.item ?: return 0
+        if (itemstack.item == null) return 0
         val progress = despawnNotificationProgress(itemIn, partialTicks)
         val prog_squared = progress*progress
         val age = itemIn.age.toFloat() + partialTicks

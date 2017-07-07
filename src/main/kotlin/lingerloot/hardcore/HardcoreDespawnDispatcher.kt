@@ -7,7 +7,7 @@ import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
 object HardcoreDespawnDispatcher {
-    fun dispatch(event: ItemExpireEvent) {
+    fun dispatch(cfg: LingeringLootConfig, event: ItemExpireEvent) {
         val entityItem = event.entityItem
         if (entityItem.item.count <= 0) return
         val world = entityItem.entityWorld as? WorldServer ?: return
@@ -25,9 +25,9 @@ object HardcoreDespawnDispatcher {
         val type = entityItem.item.item
 
         when (type) {
-            is ItemBlock -> placeAndSplitBlock(world, entityItem, type)
-            is ItemTool -> toolTime(world, entityItem, type, event)
-            is Item -> attemptUseStack(world, entityItem, type, event)
+            is ItemBlock -> placeAndSplitBlock(cfg, world, entityItem, type)
+            is ItemTool -> toolTime(cfg, world, entityItem, type, event)
+            is Item -> attemptUseStack(cfg, world, entityItem, type, event)
         }
     }
 }
