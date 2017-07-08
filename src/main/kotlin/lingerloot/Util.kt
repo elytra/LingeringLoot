@@ -74,6 +74,6 @@ fun blocksIntersectingSmallEntity(entity: Entity, cylinder: Boolean): List<Block
  */
 fun blockAreaOfEffectForEntityAirLast(world: WorldServer, entity: Entity, cylinder: Boolean): List<BlockPos> {
     val topLayer = blocksIntersectingSmallEntity(entity, cylinder)
-    val filtered = (topLayer + topLayer.map{it.down()}).partition{!world.isAirBlock(it)}
-    return filtered.first + filtered.second
+    val filtered = (topLayer + topLayer.map{it.down()}).partition{world.isAirBlock(it)}
+    return filtered.second + filtered.first
 }

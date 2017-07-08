@@ -2,6 +2,7 @@ package lingerloot.hardcore
 
 import lingerloot.LingeringLootConfig
 import lingerloot.rand
+import net.minecraft.block.BlockFalling
 import net.minecraft.block.material.EnumPushReaction
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityItem
@@ -21,7 +22,14 @@ fun placeAndSplitBlock(cfg: LingeringLootConfig, world: WorldServer, entityItem:
     if (entityItem.item.count <= 0) return
 
     val fakePlayer = FakerPlayer(world, entityItem)
-    val pos = entityItem.position
+    val pos = if (type.block is BlockFalling) {
+        (1..64).map{entityItem.position.add(0, it, 0)}
+            .firstOrNull{it.y>= world.minecraftServer!!.buildLimit || !world.isAirBlock(it)}
+            ?.add(0, -1, 0)
+            ?: entityItem.position.add(0, 64, 0)
+    } else {
+        entityItem.position
+    }
     fakePlayer.interactionManager.tryHarvestBlock(pos)
 
     val canPushBlocks =
