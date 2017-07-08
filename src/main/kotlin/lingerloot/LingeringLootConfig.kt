@@ -49,7 +49,7 @@ class LingeringLootConfig(file: File) {
         minedPickupDelay = config.getInt("pickup delay", bonusCategory, 5, 0, 10, "pickup delay for player-mined items in ticks (0-10, 0 is instant and 10 is no change)")
 
         config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")
-        shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,snowball").string.split(",").
+        shitTier = config.get(shitTierCategory, "shit tier items", "cobblestone,andesite,diorite,granite,snowball").string.split(",").
                 map{b -> Item.REGISTRY.getObject(ResourceLocation(b))}.filterNotNull().
                 toSet()
         shitTierMods = config.get(shitTierCategory, "shit tier mods", "").string.split(",").
