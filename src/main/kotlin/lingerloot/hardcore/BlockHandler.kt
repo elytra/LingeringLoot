@@ -8,6 +8,7 @@ import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemSign
 import net.minecraft.item.ItemStack
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.EnumHand
@@ -70,6 +71,7 @@ fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemSta
     if (type.placeBlockAt(item, FakePlayer(world, DROPS_PROFILE), world, pos, EnumFacing.UP,0f, 0f, 0f,
             getBlockForPlacement(world, pos, type, item, player))) {
         item.shrink(1)
+        if (type is ItemSign)
         return true
     }
 
