@@ -1,7 +1,10 @@
-package lingerloot.hardcore
+package lingerloot.hardcore.handlers
 
 import lingerloot.LingeringLootConfig
 import lingerloot.blockAreaOfEffectForEntityAirLast
+import lingerloot.hardcore.FakerPlayer
+import lingerloot.hardcore.jumpAround
+import lingerloot.hardcore.scatterRemainderToTheWinds
 import net.minecraft.block.Block.NULL_AABB
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemTool

@@ -1,6 +1,9 @@
-package lingerloot.hardcore
+package lingerloot.hardcore.handlers
 
 import lingerloot.LingeringLootConfig
+import lingerloot.hardcore.DROPS_PROFILE
+import lingerloot.hardcore.FakerPlayer
+import lingerloot.hardcore.scatterRemainderToTheWinds
 import lingerloot.rand
 import net.minecraft.block.BlockFalling
 import net.minecraft.block.material.EnumPushReaction
@@ -8,7 +11,6 @@ import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemSign
 import net.minecraft.item.ItemStack
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.EnumHand
@@ -60,22 +62,18 @@ fun placeAndSplitBlock(cfg: LingeringLootConfig, world: WorldServer, entityItem:
     scatterRemainderToTheWinds(world, entityItem)
 }
 
-fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack): Boolean {
+fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack) {
     val player = FakePlayer(world, DROPS_PROFILE)
 
     if (pos.y < 1 || pos.y >= world.minecraftServer?.buildLimit?:-25565)
-        return false
+        return
 
-    if (!type.block.canPlaceBlockAt(world, pos)) return false
+    if (!type.block.canPlaceBlockAt(world, pos)) return
 
     if (type.placeBlockAt(item, FakePlayer(world, DROPS_PROFILE), world, pos, EnumFacing.UP,0f, 0f, 0f,
-            getBlockForPlacement(world, pos, type, item, player))) {
+            getBlockForPlacement(world, pos, type, item, player)))
         item.shrink(1)
-        if (type is ItemSign)
-        return true
-    }
-
-    return false
+        return
 }
 
 fun getBlockForPlacement(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack, player: FakePlayer): IBlockState {

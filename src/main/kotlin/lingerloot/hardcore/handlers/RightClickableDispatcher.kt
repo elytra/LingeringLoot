@@ -1,7 +1,9 @@
-package lingerloot.hardcore
+package lingerloot.hardcore.handlers
 
 import lingerloot.LingeringLootConfig
 import lingerloot.blockAreaOfEffectForEntityAirLast
+import lingerloot.hardcore.FakerPlayer
+import lingerloot.hardcore.scatterRemainderToTheWinds
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Items
 import net.minecraft.item.Item
@@ -56,7 +58,7 @@ fun attemptUseStack(cfg: LingeringLootConfig, world: WorldServer, entityItem: En
 
     when(type) {
         Items.ENDER_PEARL -> {
-            event.extraLife = 120
+            event.extraLife = 200
             event.isCanceled = true
         }
         else -> scatterRemainderToTheWinds(world, entityItem)

@@ -1,8 +1,11 @@
 package lingerloot.hardcore
 
 import com.mojang.authlib.GameProfile
+import lingerloot.extractAge
 import lingerloot.ifAlive
 import net.minecraft.entity.item.EntityItem
+import net.minecraft.init.Items
+import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemStack
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetHandlerPlayServer
@@ -64,7 +67,10 @@ class FakerPlayer(world: WorldServer, val holding: EntityItem?): FakePlayer(worl
 
     override fun setPositionAndUpdate(x: Double, y: Double, z: Double) {
         setPosition(x, y, z) // there shall be no update!
-        holding.ifAlive()?.setPositionAndUpdate(x, y, z)
+        holding.ifAlive()?.let {
+            it.setPositionAndUpdate(x, y, z)
+            it.lifespan = it.extractAge() + 20
+        }
     }
 
     /**

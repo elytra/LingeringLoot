@@ -1,6 +1,7 @@
 package lingerloot.hardcore
 
 import lingerloot.*
+import lingerloot.hardcore.handlers.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.*
 import net.minecraft.world.WorldServer
@@ -25,6 +26,9 @@ object HardcoreDespawnDispatcher {
         val type = entityItem.item.item
 
         when (type) {
+            is ItemArrow -> spamArrows(world, entityItem, type)
+            is ItemBow -> fireBow(world, entityItem, type, event)
+            is ItemFood -> spontaneousGeneration(world, entityItem, type)
             is ItemBlock -> placeAndSplitBlock(cfg, world, entityItem, type)
             is ItemTool -> toolTime(cfg, world, entityItem, type, event)
             is Item -> attemptUseStack(cfg, world, entityItem, type, event)
@@ -33,9 +37,9 @@ object HardcoreDespawnDispatcher {
 }
 
 fun EntityItem.jumpAround() {
-    this.motionX = (rand.nextDouble()-.5)/3
+    this.motionX = (rand.nextDouble()-.5)/2
     this.motionY =  rand.nextDouble()    /3
-    this.motionZ = (rand.nextDouble()-.5)/3
+    this.motionZ = (rand.nextDouble()-.5)/2
     this.posX += 3*this.motionX
     this.posY += 3*this.motionY
     this.posZ += 3*this.motionZ
