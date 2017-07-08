@@ -42,6 +42,6 @@ class RenderLLEntityItem(renderManager: RenderManager, item: RenderItem): Render
     fun ageOffsetBob(progress: Float): Float = 400*progress*progress*progress
 
     fun ageOffsetSpin(progress: Float): Float {
-        return -4000*progress*progress*progress*progress
+        return -1400*progress*progress*progress*progress
     }
 }
