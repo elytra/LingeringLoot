@@ -35,9 +35,12 @@ class RenderLLEntityItem(renderManager: RenderManager, item: RenderItem): Render
         return i
     }
 
-    fun despawnNotificationProgress(entity: EntityItem, partialTicks: Float) = (Math.min(JITTER_TIME.toFloat(), Math.max(0f,
-            JITTER_TIME - entity.lifespan + entity.age + partialTicks
-        )).toDouble()/JITTER_TIME).toFloat()
+    fun despawnNotificationProgress(entity: EntityItem, partialTicks: Float) = if (entity in jitteringItems)
+        (Math.min(JITTER_TIME.toFloat(), Math.max(0f,
+                JITTER_TIME - entity.lifespan + entity.age + partialTicks
+        )).toDouble() / JITTER_TIME).toFloat()
+    else
+        0f
 
     fun ageOffsetBob(progress: Float): Float = 400*progress*progress*progress
 

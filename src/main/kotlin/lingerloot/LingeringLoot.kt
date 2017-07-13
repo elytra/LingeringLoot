@@ -37,12 +37,15 @@ val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay();
 
 val ID_ENTITYITEMEXPLODING = 0
 
+val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
+
 val GONNA_DESPAWN = "G"
 val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
         packet(GONNA_DESPAWN).boundTo(Side.CLIENT).with(DataType.INT, "id").
             handledOnMainThreadBy { entityPlayer, token ->
                 (entityPlayer.entityWorld.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
                     it.lifespan = it.age + JITTER_TIME
+                    jitteringItems += it
                 }
             }
         .build()
@@ -168,5 +171,10 @@ class EventHandler(val cfg: LingeringLootConfig) {
     fun correctForCreativeGive(item: EntityItem) {
         if (detectCreativeGiveSecondTick(item))
             item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + cfg.despawns.creative
+    }
+
+    @SubscribeEvent
+    fun onClientTick(event: TickEvent.ClientTickEvent) {
+        if (event.phase == TickEvent.Phase.START) {jitteringItems.filterInPlace{it?.ifAlive() != null}}
     }
 }
