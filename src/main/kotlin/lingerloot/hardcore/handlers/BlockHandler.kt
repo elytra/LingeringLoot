@@ -78,5 +78,5 @@ fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemSta
 
 fun getBlockForPlacement(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack, player: FakePlayer): IBlockState {
     return type.block.getStateForPlacement(world, pos, EnumFacing.UP, 0f, 0f, 0f,
-            item.item.getMetadata(item.metadata), player, EnumHand.MAIN_HAND)
+            item.metadata, player, EnumHand.MAIN_HAND)
 }
