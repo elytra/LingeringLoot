@@ -19,7 +19,7 @@ fun spamArrows(world: WorldServer, entityItem: EntityItem, type: ItemArrow) {
         val arrow = type.createArrow(world, entityItem.item, fakePlayer)
         fakePlayer.randomLook()
         val vel = rand.nextFloat()*4
-        arrow.setAim(entityItem, fakePlayer.rotationPitch, fakePlayer.rotationYaw, 0.0f, vel, 1.0f)
+        arrow.shoot(entityItem, fakePlayer.rotationPitch, fakePlayer.rotationYaw, 0.0f, vel, 1.0f)
         arrow.isCritical = vel >= 3
         if (rand.nextFloat() < .05) arrow.setKnockbackStrength(rand.nextInt(3) + 1)
         if (rand.nextFloat() < .01) arrow.setFire(100)

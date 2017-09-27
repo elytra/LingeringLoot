@@ -21,7 +21,7 @@ fun EntityItem?.ifAlive(): EntityItem? {
 val ageField by lazy { ReflectionHelper.findField(EntityItem::class.java, "age", "field_70292_b") }
 fun EntityItem.extractAge(): Int { return ageField.get(this) as Int }
 
-val pickupDelayField by lazy { ReflectionHelper.findField(EntityItem::class.java, "delayBeforeCanPickup", "field_145804_b") }
+val pickupDelayField by lazy { ReflectionHelper.findField(EntityItem::class.java, "pickupDelay", "field_145804_b") }
 fun EntityItem.getPickupDelay(): Int { return pickupDelayField.get(this) as Int }
 
 fun splitNumberEvenlyIsh(number: Int, maxSplits: Int): Collection<Int> {

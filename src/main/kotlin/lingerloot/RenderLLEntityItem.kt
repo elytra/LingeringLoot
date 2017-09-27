@@ -1,7 +1,7 @@
 package lingerloot
 
+import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.RenderItem
 import net.minecraft.client.renderer.block.model.IBakedModel
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms
 import net.minecraft.client.renderer.entity.RenderEntityItem
@@ -9,7 +9,8 @@ import net.minecraft.client.renderer.entity.RenderManager
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.util.math.MathHelper
 
-class RenderLLEntityItem(renderManager: RenderManager, item: RenderItem): RenderEntityItem(renderManager, item) {
+class RenderLLEntityItem(renderManager: RenderManager):
+        RenderEntityItem(renderManager, Minecraft.getMinecraft().renderItem) {
     override fun transformModelCount(itemIn: EntityItem, x: Double, y: Double, z: Double, partialTicks: Float, model: IBakedModel): Int {
         val itemstack = itemIn.item
         if (itemstack.item == null) return 0

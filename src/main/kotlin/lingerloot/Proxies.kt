@@ -11,12 +11,14 @@ interface CommonProxy {
 
 class ClientProxy: CommonProxy {
     override fun preInit(event: FMLPreInitializationEvent) {
-        RenderingRegistry.registerEntityRenderingHandler(EntityItem::class.java, {
-            RenderLLEntityItem(it, Minecraft.getMinecraft().renderItem)
-        })
+        println("ACTIVATEIIIING THINGAR DOOT")
+
+        RenderingRegistry.registerEntityRenderingHandler(EntityItem::class.java, ::RenderLLEntityItem)
+        println("ACTIVATED OT")
     }
 }
 
 class ServerProxy: CommonProxy {
     override fun preInit(event: FMLPreInitializationEvent) {}
 }
+
