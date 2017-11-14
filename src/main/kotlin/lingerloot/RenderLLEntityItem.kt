@@ -15,7 +15,7 @@ class RenderLLEntityItem(renderManager: RenderManager):
         val itemstack = itemIn.item
         if (itemstack.item == null) return 0
         val progress = despawnNotificationProgress(itemIn, partialTicks)
-        val prog_squared = progress*progress
+        val prog_squared = if (progress < 1) progress*progress else 1f // clamp bob height if item despawns late
         val age = itemIn.age.toFloat() + partialTicks
 
         val flag = model.isGui3d
@@ -43,9 +43,13 @@ class RenderLLEntityItem(renderManager: RenderManager):
     else
         0f
 
-    fun ageOffsetBob(progress: Float): Float = 400*progress*progress*progress
+    private fun ageOffsetBob(progress: Float): Float = if (progress < 1)
+        400*progress*progress*progress
+    else
+        400 + 1200*progress // continue at fixed slope if item despawns late
 
-    fun ageOffsetSpin(progress: Float): Float {
-        return -1400*progress*progress*progress*progress
-    }
+    private fun ageOffsetSpin(progress: Float): Float = if (progress < 1)
+        -1400*progress*progress*progress*progress
+    else
+        -1400 - 5600*progress
 }
