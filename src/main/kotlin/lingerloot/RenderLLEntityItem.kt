@@ -37,9 +37,8 @@ class RenderLLEntityItem(renderManager: RenderManager):
     }
 
     fun despawnNotificationProgress(entity: EntityItem, partialTicks: Float) = if (entity in jitteringItems)
-        (Math.min(JITTER_TIME.toFloat(), Math.max(0f,
-                JITTER_TIME - entity.lifespan + entity.age + partialTicks
-        )).toDouble() / JITTER_TIME).toFloat()
+        (Math.max(0f, JITTER_TIME - entity.lifespan + entity.age + partialTicks
+        ).toDouble() / JITTER_TIME).toFloat()
     else
         0f
 
