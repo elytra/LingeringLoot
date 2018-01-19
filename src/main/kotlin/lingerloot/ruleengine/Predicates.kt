@@ -28,7 +28,7 @@ fun predicate(ctx: ParseContext, s: String): Either<Predicate, String> = ctx.pre
 
 private fun genPredicate(ctx: ParseContext, s: String): Either<Predicate, String> {
     when (s[0]) {
-        '~' -> {
+        '~' -> { // TODO: ~ as negation, come up with a new symbol
             val oredictName = s.substring(1)
             if (!OreDictionary.doesOreNameExist(oredictName))
                 return Either.right("Invalid oredict name: \"$oredictName\"")

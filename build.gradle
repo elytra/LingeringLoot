@@ -1,6 +1,6 @@
 // For those who want the bleeding edge
 buildscript {
-    ext.kotlin_version = '1.1.4-3'
+    ext.kotlin_version = '1.2.20'
     //noinspection InconsistentLineSeparators,InconsistentLineSeparators,InconsistentLineSeparators
     repositories {
         jcenter()
@@ -49,14 +49,11 @@ repositories {
 }
 
 dependencies {
-    compile group: "net.shadowfacts", name: "Forgelin", version: "1.5.0"
-    deobfCompile 'com.elytradev.concrete:concrete-common:0.3.6-SNAPSHOT'
-    shadow 'com.elytradev.concrete:concrete-common:0.3.6-SNAPSHOT'
-    deobfCompile 'com.elytradev.concrete:concrete-network:0.3.6-SNAPSHOT'
-    shadow 'com.elytradev.concrete:concrete-network:0.3.6-SNAPSHOT'
-
-//    deobfCompile 'com.elytradev.concrete:concrete-<module name>:0.3.6-SNAPSHOT'
-//    shadow 'com.elytradev.concrete:concrete-<module name>:0.3.6-SNAPSHOT'
+    compile group: "net.shadowfacts", name: "Forgelin", version: "1.6.0"
+    deobfCompile 'com.elytradev.concrete:concrete-common:0.3.7-SNAPSHOT'
+    shadow 'com.elytradev.concrete:concrete-common:0.3.7-SNAPSHOT'
+    deobfCompile 'com.elytradev.concrete:concrete-network:0.3.7-SNAPSHOT'
+    shadow 'com.elytradev.concrete:concrete-network:0.3.7-SNAPSHOT'
 }
 
 shadowJar {
