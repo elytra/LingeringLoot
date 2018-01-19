@@ -28,7 +28,11 @@ fun predicate(ctx: ParseContext, s: String): Either<Predicate, String> = ctx.pre
 
 private fun genPredicate(ctx: ParseContext, s: String): Either<Predicate, String> {
     when (s[0]) {
-        '~' -> { // TODO: ~ as negation, come up with a new symbol
+        '!' -> {
+            if (s.length < 2) return Either.right("Empty subpredicate")
+            return predicate(ctx, s.substring(1)).mapLeft{NegatedPredicate(it)}
+        }
+        '$' -> {
             val oredictName = s.substring(1)
             if (!OreDictionary.doesOreNameExist(oredictName))
                 return Either.right("Invalid oredict name: \"$oredictName\"")
@@ -120,4 +124,8 @@ class ItemPredicate(val item: Item, val damage: Int?): Predicate {
 
 class ModIdPredicate(val mod: String): Predicate {
     override fun resolve(ctx: EvaluationContext) = ctx.item.item.item.registryName?.resourceDomain == mod
+}
+
+class NegatedPredicate(val neg: Predicate): Predicate {
+    override fun resolve(ctx: EvaluationContext) = !neg.resolve(ctx)
 }

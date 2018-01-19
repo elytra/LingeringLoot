@@ -18,11 +18,13 @@ val defaultRules = """
 # Predicates:
 #  itemname
 #   - This can be a vanilla itemname, or modname:itemname, itemname@damage, or both
-#  ~oredictName
+#  ${'$'}oredictName
 #  %tagname
 #  @cause
 #  &class
 #  :modid
+#  !not
+#
 #
 # Cause refers to the conditions that caused the item to drop, as in the classic
 # lingering loot config. They are:
