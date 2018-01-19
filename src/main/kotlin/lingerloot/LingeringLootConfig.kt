@@ -1,5 +1,8 @@
 package lingerloot
 
+import com.elytradev.concrete.common.Either
+import lingerloot.ruleengine.Rules
+import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.config.Configuration
@@ -12,9 +15,11 @@ class LingeringLootConfig(file: File) {
     val hardcore: Boolean
     val shiva: Boolean
     val minedPickupDelay: Int
+    var rules: Either<Rules, String>
 
     init {
-        val config = Configuration(file)
+        val config = Configuration(file.resolve("lingeringloot.cfg"))
+        rules = parseRules(file.resolve("lingeringloot.rules"))
 
         val timeCategory = "despawn times"
         val shitTierCategory = "shit tier"
@@ -28,8 +33,11 @@ class LingeringLootConfig(file: File) {
 
         fun configOptionSecs(category: String, name: String, default: Int): Int {
             val r = (20 * config.get(category, name, default.toDouble()).getDouble(default.toDouble())).toInt()
-            return if (r == MINECRAFT_LIFESPAN) FAKE_DEFAULT_LIFESPAN else  // important to differentiate 6000 from -1
-            return if (r == CREATIVE_GIVE_DESPAWN_TICK) CREATIVE_GIVE_DISAMBIGUATE else r // differentiate /give fakeitems
+            return when (r) {
+                MINECRAFT_LIFESPAN -> FAKE_DEFAULT_LIFESPAN  // important to differentiate 6000 from -1
+                CREATIVE_GIVE_DESPAWN_TICK -> CREATIVE_GIVE_DISAMBIGUATE // differentiate /give fakeitems
+                else -> r
+            }
         }
 
         despawns = DespawnTimes(

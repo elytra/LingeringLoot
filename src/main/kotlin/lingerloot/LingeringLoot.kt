@@ -1,7 +1,5 @@
 package lingerloot
 
-import com.unascribed.lambdanetwork.DataType
-import com.unascribed.lambdanetwork.LambdaNetwork
 import lingerloot.hardcore.EntityItemExploding
 import lingerloot.hardcore.HardcoreDespawnDispatcher
 import net.minecraft.entity.item.EntityItem
@@ -39,17 +37,6 @@ val ID_ENTITYITEMEXPLODING = 0
 
 val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
 
-val GONNA_DESPAWN = "G"
-val LAMBDA_NETWORK = LambdaNetwork.builder().channel("LingeringLoot").
-        packet(GONNA_DESPAWN).boundTo(Side.CLIENT).with(DataType.INT, "id").
-            handledOnMainThreadBy { entityPlayer, token ->
-                (entityPlayer.entityWorld.getEntityByID(token.getInt("id")) as? EntityItem).ifAlive()?.let {
-                    it.lifespan = it.age + JITTER_TIME
-                    jitteringItems += it
-                }
-            }
-        .build()
-
 val JITTER_TIME = 300
 
 val rand = Random()
@@ -61,7 +48,7 @@ const val MODID = "lingeringloot"
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
-        MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory.resolve("lingeringloot.cfg"))))
+        MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory)))
 
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
@@ -98,6 +85,9 @@ class EventHandler(val cfg: LingeringLootConfig) {
                     else
                         target
         }
+
+        val q = ::LingeringLoot
+
 
         prescreen.add(itemDrop)
     }

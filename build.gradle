@@ -41,6 +41,7 @@ repositories {
     jcenter()
     maven {
         url = 'http://unascribed.com/maven/releases'
+        url = 'https://repo.elytradev.com'
     }
     maven {
         url "http://maven.shadowfacts.net/"
@@ -49,13 +50,18 @@ repositories {
 
 dependencies {
     compile group: "net.shadowfacts", name: "Forgelin", version: "1.5.0"
-    compile 'com.unascribed:lambdanetwork:1.0.0'
-    shadow 'com.unascribed:lambdanetwork:1.0.0'
+    deobfCompile 'com.elytradev.concrete:concrete-common:0.3.6-SNAPSHOT'
+    shadow 'com.elytradev.concrete:concrete-common:0.3.6-SNAPSHOT'
+    deobfCompile 'com.elytradev.concrete:concrete-network:0.3.6-SNAPSHOT'
+    shadow 'com.elytradev.concrete:concrete-network:0.3.6-SNAPSHOT'
+
+//    deobfCompile 'com.elytradev.concrete:concrete-<module name>:0.3.6-SNAPSHOT'
+//    shadow 'com.elytradev.concrete:concrete-<module name>:0.3.6-SNAPSHOT'
 }
 
 shadowJar {
     relocate 'org.jetbrains.annotations', 'lingerlootkot.jetbrains.annotations'
-    relocate 'com.unascribed.lambdanetwork', "lingerlootkot.unascribed.lambdanetwork"
+    relocate 'com.elytradev.concrete', 'lingerlootkot.repackage.com.elytradev.concrete'
     classifier ''
     configurations = [project.configurations.shadow]
 }
@@ -65,6 +71,10 @@ reobf {
 }
 
 tasks.build.dependsOn reobfShadowJar
+
+artifacts {
+    archives shadowJar
+}
 
 processResources {
     // this will ensure that this task is redone when the versions change.
@@ -92,6 +102,7 @@ sourceSets {
 }
 
 jar {
+    classifier = 'slim'
     manifest {
         attributes 'FMLAT': 'lingeringloot_at.cfg'
     }
