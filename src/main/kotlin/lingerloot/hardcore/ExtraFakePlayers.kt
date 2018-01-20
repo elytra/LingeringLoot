@@ -30,8 +30,10 @@ val DROPS_PROFILE = GameProfile(UUID.randomUUID(), "The Drops")
 
 class FakerPlayer(world: WorldServer, val holding: EntityItem?): FakePlayer(world, DROPS_PROFILE) {
     init {
-        if (holding != null)
+        if (holding != null) {
             setPosition(holding.posX, holding.posY, holding.posZ)
+            setHeldItem(EnumHand.MAIN_HAND, holding.item)
+        }
         NetHandlerPlayServer(null, FakeNetworkManager, this)
         rotationYawHead = (rand.nextDouble() * 360).toFloat()
         rotationYaw = rotationYawHead
