@@ -1,8 +1,8 @@
 package lingerloot.ruleengine
 
 import com.elytradev.concrete.common.Either
+import lingerloot.lookupItem
 import net.minecraft.item.*
-import net.minecraft.util.ResourceLocation
 import net.minecraftforge.oredict.OreDictionary
 
 
@@ -59,16 +59,7 @@ private fun genPredicate(ctx: ParseContext, s: String): Either<Predicate, String
             return Either.right("Unknown cause: \"$causeName\"")
         }
         else -> {
-            val itemName = s.takeWhile{it != '@'}
-
-            val damage = if (itemName.length == s.length)
-                null
-            else
-                s.substring(itemName.length + 1).toIntOrNull()
-                        ?: return Either.right("Invalid damage value for item \"$s\"")
-
-            val item = Item.REGISTRY.getObject(ResourceLocation(itemName)) ?: return Either.right("Item not found: \"$s\"")
-            return Either.left(ItemPredicate(item, damage))
+            return lookupItem(s).mapLeft{it}
         }
     }
 }

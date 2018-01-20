@@ -1,7 +1,7 @@
 package lingerloot
 
 import com.elytradev.concrete.common.Either
-import lingerloot.ruleengine.Rules
+import lingerloot.ruleengine.Rule
 import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
@@ -15,7 +15,7 @@ class LingeringLootConfig(file: File) {
     val hardcore: Boolean
     val shiva: Boolean
     val minedPickupDelay: Int
-    var rules: Either<Rules, String>
+    var rules: Either<List<Rule>, String>
 
     init {
         val config = Configuration(file.resolve("lingeringloot.cfg"))

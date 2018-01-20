@@ -20,7 +20,6 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
-import net.minecraftforge.fml.relauncher.Side
 import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default

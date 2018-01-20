@@ -1,8 +1,13 @@
 package lingerloot
 
+import com.elytradev.concrete.common.Either
+import lingerloot.ruleengine.ItemPredicate
 import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Blocks
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldServer
 import net.minecraftforge.fml.relauncher.ReflectionHelper
@@ -76,4 +81,17 @@ fun blockAreaOfEffectForEntityAirLast(world: WorldServer, entity: Entity, cylind
     val topLayer = blocksIntersectingSmallEntity(entity, cylinder)
     val filtered = (topLayer + topLayer.map{it.down()}).partition{world.isAirBlock(it)}
     return filtered.second + filtered.first
+}
+
+fun lookupItem(s: String): Either<ItemPredicate, String> {
+    val itemName = s.takeWhile{it != '@'}
+
+    val damage = if (itemName.length == s.length)
+        null
+    else
+        s.substring(itemName.length + 1).toIntOrNull()
+                ?: return Either.right("Invalid damage value for item \"$s\"")
+
+    val item = Item.REGISTRY.getObject(ResourceLocation(itemName)) ?: return Either.right("Item not found: \"$s\"")
+    return Either.left(ItemPredicate(item, damage))
 }

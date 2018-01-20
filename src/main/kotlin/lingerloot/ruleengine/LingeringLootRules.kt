@@ -60,11 +60,11 @@ val defaultRules = """
 #
 # Results:
 # timer(t)     set despawn time to t seconds
-# notimer      leave default despawn time and prevent matching a lower priority timer directive
+# timer        leave default despawn time and prevent matching a lower priority timer directive
 # volatile     item will trigger special behavior when it would despawn
 # novolatile   not volatile (to override a lower priority volatile result)
 # convert(i)   transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
-# noconvert    prevent a lower priority convert result
+# convert      prevent a lower priority convert result
 #
 #
 #
@@ -86,7 +86,7 @@ val commentPattern = Pattern.compile("#.*")
 val tagnamePattern = Pattern.compile("[A-Za-z]+")
 val arrowPattern = Pattern.compile("->")
 
-class Rules {
+class RulesAggregator {
     val levels = mutableMapOf<Int, RulesLevel>()
 
     fun add(ctx: ParseContext, level: Int, rule: Scanner): String? =
@@ -128,45 +128,47 @@ class Rules {
         }
     }
 
-    class RulesLevel {
-        val rules = mutableListOf<Rule>()
+    fun getRules() = levels.entries.sortedByDescending{it.key}.flatMap{it.value.rules}
+}
 
-        fun add(ctx: ParseContext, s: Scanner): String? {
-            val rule = Rule()
-            rules.add(rule)
+class RulesLevel {
+    val rules = mutableListOf<Rule>()
 
-            while (!s.hasNext(arrowPattern)) {
-                if (!s.hasNext()) return "No arrow (\"->\") in rule line"
-                rule.addPredicate(ctx, s.next()) ?.let{return it}
-            }
-            s.next()
+    fun add(ctx: ParseContext, s: Scanner): String? {
+        val rule = Rule()
+        rules.add(rule)
 
-            while (s.hasNext())
-                rule.addEffect(s.next()) ?.let{return it}
-            if (rule.effects.isEmpty()) return "No effects for rule"
-
-            return null
+        while (!s.hasNext(arrowPattern)) {
+            if (!s.hasNext()) return "No arrow (\"->\") in rule line"
+            rule.addPredicate(ctx, s.next()) ?.let{return it}
         }
-    }
+        s.next()
 
-    class Rule {
-        val predicates = Predicates()
-        val effects = mutableListOf<Effect>()
+        while (s.hasNext())
+            rule.addEffect(s.next()) ?.let{return it}
+        if (rule.effects.isEmpty()) return "No effects for rule"
 
-        fun addPredicate(ctx: ParseContext, s: String): String? = predicates.add(ctx, s)
-
-        fun addEffect(s: String): String? = effect(s).map(
-                {
-                    effects.add(it)
-                    null
-                },
-                {it}
-            )
+        return null
     }
 }
 
+class Rule {
+    val predicates = Predicates()
+    val effects = mutableListOf<Effect>()
+
+    fun addPredicate(ctx: ParseContext, s: String): String? = predicates.add(ctx, s)
+
+    fun addEffect(s: String): String? = effect(s).map(
+            {
+                effects.add(it)
+                null
+            },
+            {it}
+    )
+}
+
 fun errMessage(ln: Int, m: String) = "Error on line $ln: $m"
-fun errEither(s: String) = Either.right<Rules, String>(s)
+fun errEither(s: String) = Either.right<List<Rule>, String>(s)
 
 
 class ParseContext {
@@ -175,11 +177,11 @@ class ParseContext {
     val tagPredicates = mutableListOf<TagPredicate>()
 }
 
-fun parseRules(fileInput: File): Either<Rules, String> {
+fun parseRules(fileInput: File): Either<List<Rule>, String> {
     if (!fileInput.exists())
         fileInput.writeText(defaultRules)
 
-    val rules = Rules()
+    val rules = RulesAggregator()
     val ctx = ParseContext()
 
     fileInput.useLines {
@@ -211,7 +213,7 @@ fun parseRules(fileInput: File): Either<Rules, String> {
         it.predicateses = tag
     })
 
-    return Either.left(rules)
+    return Either.left(rules.getRules())
 }
 
 val specialDelimiters = Regex("[\\[\\],]") // these characters get automatically surrounded with spaces
