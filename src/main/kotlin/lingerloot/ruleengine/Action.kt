@@ -1,9 +1,11 @@
 package lingerloot.ruleengine
 
 import com.elytradev.concrete.common.Either
+import lingerloot.logger
 import lingerloot.lookupItem
 import net.minecraft.entity.item.EntityItem
 import net.minecraftforge.oredict.OreDictionary
+import kotlin.reflect.KClass
 
 class EvaluationContext(val rules: List<Rule>, val item: EntityItem, val causeMask: Int) {
     val oreIds = OreDictionary.getOreIDs(item.item).toSet()
@@ -11,7 +13,7 @@ class EvaluationContext(val rules: List<Rule>, val item: EntityItem, val causeMa
     val tagCache = mutableMapOf<String, Boolean>()
     val tagRecursionStack = mutableSetOf<String>()
 
-    fun evaluate(): EffectBuffer {
+    private fun evaluate(): EffectBuffer {
         val buf = EffectBuffer()
         try {
             rules.forEach{
@@ -21,39 +23,28 @@ class EvaluationContext(val rules: List<Rule>, val item: EntityItem, val causeMa
                 }
             }
         } catch (e: Exception) {
-            // TODO log error
+            logger?.error("Error in Lingering Loot rules engine: ${e.message}")
         }
         return buf
     }
+
+    fun act() = evaluate().applyTo(item)
 }
 
+val expectedEffectTypes = setOf(TimerEffect::class, VolatileEffect::class, TransformEffect::class)
 class EffectBuffer {
-    var timer: TimerEffect? = null
-    var volatile: VolatileEffect? = null
-    var tf: TransformEffect? = null
+    private val effects = mutableMapOf<KClass<out Effect>, Effect>()
 
-    fun caresAbout(effects: List<Effect>) = effects.any{caresAbout(it)}
+    fun caresAbout(newEffects: List<Effect>) = newEffects.any{caresAbout(it)}
+    fun caresAbout(effect: Effect) = !effects.containsKey(effect::class)
 
-    fun caresAbout(effect: Effect) = when (effect) {
-        is TimerEffect -> {timer == null}
-        is VolatileEffect -> {volatile == null}
-        is TransformEffect -> {tf == null}
-        else -> {false}
+    fun update(newEffects: List<Effect>) = newEffects.forEach{
+        effects.putIfAbsent(it::class, it)
     }
 
-    fun update(effects: List<Effect>) {
-        effects.forEach{when (it) {
-            is TimerEffect -> {if (timer == null) timer = it}
-            is VolatileEffect -> {if (volatile == null) volatile = it}
-            is TransformEffect -> {if (tf == null) tf = it}
-        }}
-    }
+    fun full() = expectedEffectTypes.all{it in effects}
 
-    fun full() = timer != null && volatile != null && tf != null
-
-    fun applyTo(target: EntityItem) {
-        timer?.applyTo(target)
-    }
+    fun applyTo(target: EntityItem) = effects.values.forEach{it.applyTo(target)}
 }
 
 fun effect(s: String): Either<Effect, String> {

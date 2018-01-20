@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
+import org.apache.logging.log4j.Logger
 import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
@@ -41,12 +42,16 @@ val JITTER_TIME = 300
 val rand = Random()
 const val MODID = "lingeringloot"
 
+var logger: Logger? = null
+
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
 @Mod(modid = MODID, version = "3.0", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
+        logger = event.modLog
+
         MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory)))
 
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
