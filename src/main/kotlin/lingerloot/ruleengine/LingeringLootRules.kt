@@ -183,14 +183,15 @@ class ParseContext {
 
 fun generateDefaultRules(legacyRules: LegacyRules): String {
     val builder = StringBuilder(documentation)
-    val crap = legacyRules.shitTier.isNotEmpty() || legacyRules.shitTierMods.isNotEmpty()
+    val shitModsFiltered = legacyRules.shitTierMods.filter{it.length > 0}
+    val crap = legacyRules.shitTier.isNotEmpty() || shitModsFiltered.isNotEmpty()
     if (crap) {
         builder.append("crap [")
         if (legacyRules.shitTier.isNotEmpty()) {
             builder.appendln(legacyRules.shitTier.map { it.registryName.toString() }.joinToString(", "))
         }
         if (legacyRules.shitTierMods.isNotEmpty()) {
-            builder.append(legacyRules.shitTierMods.map { ":$it" }.joinToString(", "))
+            builder.append(shitModsFiltered.map { ":$it" }.joinToString(", "))
         }
         builder.appendln("]\n")
     }

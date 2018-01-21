@@ -54,6 +54,8 @@ dependencies {
     shadow 'com.elytradev.concrete:concrete-common:0.3.7-SNAPSHOT'
     deobfCompile 'com.elytradev.concrete:concrete-network:0.3.7-SNAPSHOT'
     shadow 'com.elytradev.concrete:concrete-network:0.3.7-SNAPSHOT'
+    deobfCompile 'com.elytradev.concrete:concrete-reflect:0.3.7-SNAPSHOT'
+    shadow 'com.elytradev.concrete:concrete-reflect:0.3.7-SNAPSHOT'
 }
 
 shadowJar {

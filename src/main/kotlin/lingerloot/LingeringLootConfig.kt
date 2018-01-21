@@ -1,6 +1,5 @@
 package lingerloot
 
-import com.elytradev.concrete.common.Either
 import lingerloot.ruleengine.Rules
 import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item
@@ -12,7 +11,7 @@ var cfg: LingeringLootConfig? = null
 
 class LingeringLootConfig(file: File) {
     val antilag: Boolean
-    var rules: Either<Rules, String>
+    var rules: Rules? = null
 
     init {
         val config = Configuration(file.resolve("lingeringloot.cfg"))
@@ -31,7 +30,10 @@ class LingeringLootConfig(file: File) {
 
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
-        rules = parseRules(file.resolve("lingeringloot.rules"), {LegacyRules(config)})
+        parseRules(file.resolve("lingeringloot.rules"), {LegacyRules(config)}).map(
+            {rules = it},
+            {logger?.error(it)}
+        )
 
         cfg = this
     }

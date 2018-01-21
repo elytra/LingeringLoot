@@ -65,6 +65,7 @@ class LingeringLoot {
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
 
         registerCapabilities()
+        initMessageContexts()
 
         proxy?.preInit(event)
     }
@@ -76,7 +77,7 @@ val prescreen = mutableMapOf<EntityItem, Int>()
 class EventHandler() {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
-    fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules.mapLeft {
+    fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules?.let {
         if (item.extractPickupDelay() != INFINITE_PICKUP_DELAY) // ignore cosmetic fake item
             EvaluationContext(it, item, causeMask).act()
     }
