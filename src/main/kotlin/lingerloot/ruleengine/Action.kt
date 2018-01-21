@@ -51,7 +51,7 @@ class EffectBuffer: Effect {
 
 fun effect(s: String): Either<Iterable<Effect>, String> {
     val word = s.takeWhile{it != '('}
-    val param = if (word.length <= s.length)
+    val param = if (word.length < s.length)
         if (s.last() == ')')
             s.substring(word.length+1, s.length-1)
         else
