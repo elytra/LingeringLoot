@@ -2,6 +2,7 @@ package lingerloot.volatility.handlers
 
 import lingerloot.LingeringLootConfig
 import lingerloot.blockAreaOfEffectForEntityAirLast
+import lingerloot.cfg
 import lingerloot.volatility.FakerPlayer
 import lingerloot.volatility.scatterRemainderToTheWinds
 import net.minecraft.entity.item.EntityItem
@@ -16,7 +17,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
-fun attemptUseStack(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent) {
+fun attemptUseStack(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent) {
     val fakePlayer = FakerPlayer(world, entityItem)
     val initialCount = fakePlayer.heldItemMainhand.count
 
@@ -32,7 +33,7 @@ fun attemptUseStack(cfg: LingeringLootConfig, world: WorldServer, entityItem: En
             break
     }
 
-    if (cfg.antilag && type is ItemEgg) entityItem.item = ItemStack(Items.SNOWBALL, entityItem.item.count)
+    if (cfg!!.antilag && type is ItemEgg) entityItem.item = ItemStack(Items.SNOWBALL, entityItem.item.count)
 
     for (i in (1..3)) {
         fakePlayer.randomLook()

@@ -2,6 +2,7 @@ package lingerloot.ruleengine
 
 import com.elytradev.concrete.common.Either
 import lingerloot.*
+import lingerloot.volatility.despawnHandlerSetsByShort
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemStack
 import net.minecraftforge.oredict.OreDictionary
@@ -59,33 +60,51 @@ fun effect(s: String): Either<Iterable<Effect>, String> {
         null
 
     return Either.left<Iterable<Effect>, String>(when (word) {
-        "timer" -> {listOf(TimerEffect(param?.let{
-            val seconds = it.toDoubleOrNull()?: return Either.right("Invalid double: \"$param\"")
+        "timer" -> {listOf(if (param == null) {
+            NOTIMER
+        } else {
+            val seconds = param.toDoubleOrNull() ?: return Either.right("Invalid double: \"$param\"")
             val ticks = (seconds * 20).toInt()
-            when (ticks) {
-                MINECRAFT_LIFESPAN -> FAKE_DEFAULT_LIFESPAN  // important to differentiate 6000 from -1
-                CREATIVE_GIVE_DESPAWN_TICK -> CREATIVE_GIVE_DISAMBIGUATE // differentiate /give fakeitems
-                else -> ticks
-            }
-        }))}
-        "convert" -> {listOf(TransformEffect(param?.let{
-            val lookup = lookupItem(it)
-            if (lookup.isLeft) lookup.leftNullable
-            else return Either.right(lookup.rightNullable)
-        }))}
-        "pickupdelay" -> {listOf(PickupDelayEffect(param?.let {
-            it.toIntOrNull()?: return Either.right("Invalid int: \"$param\"")
-        }))}
-        "volatile" -> {listOf(VOL)}
-        "novolatile" -> {listOf(NOVOL)}
+            TimerEffect(
+                when (ticks) {
+                    MINECRAFT_LIFESPAN -> FAKE_DEFAULT_LIFESPAN  // important to differentiate 6000 from -1
+                    CREATIVE_GIVE_DESPAWN_TICK -> CREATIVE_GIVE_DISAMBIGUATE // differentiate /give fakeitems
+                    else -> ticks
+                }
+            )
+        })}
+
+        "convert" -> {listOf(if (param == null) {
+            NOTF
+        } else {
+            val lookup = lookupItem(param)
+            TransformEffect(
+                if (lookup.isLeft) lookup.leftNullable
+                else return Either.right(lookup.rightNullable)
+            )
+        })}
+
+        "pickupdelay" -> {listOf(if (param == null) {
+            NODELAY
+        } else {
+            PickupDelayEffect(param.toIntOrNull()?: return Either.right("Invalid int: \"$param\""))
+        })}
+
+        "despawn" -> {listOf(if (param == null) {
+            NOVOL
+        } else {
+            if (param.length != 1) return Either.right("Despawn handler specifier must be one character")
+            val handlerCode = param[0].toShort()
+            if (handlerCode !in despawnHandlerSetsByShort) return Either.right("Invalid despawn handler code: $param")
+            VolatileEffect(handlerCode)
+        })}
         "nothing" -> {listOf(NOTIMER, NOVOL, NODELAY, NOTF)}
         else -> return Either.right("Invalid effect keyword: \"$word\"")
     })
 }
 
 
-val VOL = VolatileEffect(true)
-val NOVOL = VolatileEffect(false)
+val NOVOL = VolatileEffect(null)
 val NOTIMER = TimerEffect(null)
 val NODELAY = PickupDelayEffect(null)
 val NOTF = TransformEffect(null)
@@ -105,12 +124,10 @@ class PickupDelayEffect(val delay: Int?): Effect {
     }?:Unit
 }
 
-class VolatileEffect(val volatile: Boolean): Effect {
-    override fun accept(i: EntityItem) {
-        if (volatile) {
-            // TODO lurn capabilities shit
-        }
-    }
+class VolatileEffect(val handlerSet: Short?): Effect {
+    override fun accept(i: EntityItem) {if (handlerSet != null) {
+        i.getCapability(TOUCHED_CAP!!, null)?.despawnHandler = despawnHandlerSetsByShort[handlerSet]
+    }}
 }
 
 class TransformEffect(val replace: ItemPredicate?): Effect {

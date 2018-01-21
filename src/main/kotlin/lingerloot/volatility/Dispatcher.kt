@@ -1,6 +1,7 @@
 package lingerloot.volatility
 
 import lingerloot.*
+import lingerloot.ruleengine.TOUCHED_CAP
 import lingerloot.volatility.handlers.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.*
@@ -8,7 +9,7 @@ import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
 object DespawnDispatcher {
-    fun dispatch(cfg: LingeringLootConfig, event: ItemExpireEvent) {
+    fun dispatch(event: ItemExpireEvent) {
         val entityItem = event.entityItem
         if (entityItem.item.count <= 0) return
         val world = entityItem.entityWorld as? WorldServer ?: return
@@ -20,25 +21,29 @@ object DespawnDispatcher {
 
         prescreen.remove(entityItem)
 
-        if (entityItem.getPickupDelay() == INFINITE_PICKUP_DELAY)
-            return // ignore cosmetic fake item
-
-        val type = entityItem.item.item
-
-        when (type) {
-            is ItemArrow -> spamArrows(world, entityItem, type)
-            is ItemBow -> fireBow(world, entityItem, type, event)
-            is ItemFood -> spontaneousGeneration(world, entityItem, type)
-            is ItemBlock -> placeAndSplitBlock(cfg, world, entityItem, type)
-            is ItemTool -> toolTime(cfg, world, entityItem, type, event)
-            is Item -> attemptUseStack(cfg, world, entityItem, type, event)
-        }
+        entityItem.getCapability(TOUCHED_CAP!!, null)
+                ?.despawnHandler?.handle(world, entityItem, entityItem.item.item, event)
     }
 }
 
-interface DespawnBehaviorSet {
+enum class DespawnHandlerSet(val code: Char) {
+    HARDCORE('H') {
+        override fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent) {
+            when (type) {
+                is ItemArrow -> spamArrows(world, entityItem, type)
+                is ItemBow -> fireBow(world, entityItem, type, event)
+                is ItemFood -> spontaneousGeneration(world, entityItem, type)
+                is ItemBlock -> placeAndSplitBlock(world, entityItem, type)
+                is ItemTool -> toolTime(world, entityItem, type, event)
+                else -> attemptUseStack(world, entityItem, type, event)
+            }
+        }
+    };
 
+    abstract fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent)
 }
+val despawnHandlerSetsByShort = DespawnHandlerSet.values().map{Pair(it.code.toShort(), it)}.toMap()
+
 
 fun EntityItem.jumpAround() {
     this.motionX = (rand.nextDouble()-.5)/2

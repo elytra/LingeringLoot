@@ -69,10 +69,10 @@ val documentation = """
 # Results:
 # timer(t)       set despawn time to t seconds (float)
 # pickupdelay(t) set pickup delay (time before item can be picked up) to t ticks (int)
-# volatile(h)    item will trigger special behavior when it would despawn (handler options: H = hardcore)
+# despawn(h)     item will trigger special behavior when it would despawn (handler options: H = hardcore)
 # convert(i)     transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
-# nofoo          leave vanilla behavior and prevent matching a lower priority foo rule
-# nothing        no more effects.  equivalent to notimer nopickupdelay novolatile noconvert
+# any of the above but without a param: leaves vanilla behavior alone and prevents matching a lower priority rule
+# nothing        no more effects.  shorthand for timer pickupdelay despawn convert
 #
 # contradicting rules at the same priority level = unspecified behavior!
 # priority levels are your only way to guarantee rule ordering.  All rules and tags
@@ -201,7 +201,7 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
 
     builder.append("0 ")
     if (!legacyRules.hardcore) builder.append("snowball ")
-    builder.appendln("-> volatile(H)")
+    builder.appendln("-> despawn(H)")
 
     if (legacyRules.despawns.playerDrop >= 0) {
         builder.appendln("-1 @playerDrop -> timer(${legacyRules.despawns.playerDrop})")

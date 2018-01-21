@@ -13,7 +13,7 @@ import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
-fun toolTime(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent) {
+fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent) {
     val fakePlayer = FakerPlayer(world, entityItem)
 
     // Are entity items supposed to have a cylindrical bounding box?
@@ -31,7 +31,7 @@ fun toolTime(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityIte
         }
     }
 
-    attemptUseStack(cfg, world, entityItem, type, event) // one last chance to do something interesting, for some mod tools
+    attemptUseStack(world, entityItem, type, event) // one last chance to do something interesting, for some mod tools
 }
 
 fun extendToolTime(event: ItemExpireEvent) {

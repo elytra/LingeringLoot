@@ -2,15 +2,18 @@ package lingerloot
 
 import lingerloot.ruleengine.CausePredicates
 import lingerloot.ruleengine.EvaluationContext
+import lingerloot.ruleengine.TouchedByLingeringLewd
 import lingerloot.volatility.EntityItemExploding
 import lingerloot.ruleengine.registerCapabilities
 import lingerloot.volatility.DespawnDispatcher
+import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayer
+import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
@@ -33,8 +36,8 @@ val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDe
 val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
 val CREATIVE_LIFESPAN = MINECRAFT_LIFESPAN - CREATIVE_GIVE_DESPAWN_TICK
 
-val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.getPickupDelay()}()
-val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.getPickupDelay()}()
+val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.extractPickupDelay()}()
+val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.extractPickupDelay()}()
 
 val ID_ENTITYITEMEXPLODING = 0
 
@@ -55,7 +58,8 @@ class LingeringLoot {
     fun preInit (event: FMLPreInitializationEvent) {
         logger = event.modLog
 
-        MinecraftForge.EVENT_BUS.register(EventHandler(LingeringLootConfig(event.modConfigurationDirectory)))
+        LingeringLootConfig(event.modConfigurationDirectory)
+        MinecraftForge.EVENT_BUS.register(EventHandler())
 
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
@@ -69,11 +73,12 @@ class LingeringLoot {
 
 val prescreen = mutableMapOf<EntityItem, Int>()
 
-class EventHandler(val cfg: LingeringLootConfig) {
+class EventHandler() {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
-    fun applyRules(item: EntityItem, causeMask: Int) = cfg.rules.mapLeft {
-        EvaluationContext(it, item, causeMask).act()
+    fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules.mapLeft {
+        if (item.extractPickupDelay() != INFINITE_PICKUP_DELAY) // ignore cosmetic fake item
+            EvaluationContext(it, item, causeMask).act()
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -122,7 +127,14 @@ class EventHandler(val cfg: LingeringLootConfig) {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onItemDespawn(event: ItemExpireEvent) {
         if (!event.entity.entityWorld.isRemote)
-            DespawnDispatcher.dispatch(cfg, event)
+            DespawnDispatcher.dispatch(event)
+    }
+
+    @SubscribeEvent
+    fun onCapabilityAttachEntity(e: AttachCapabilitiesEvent<Entity>) {
+        if (e.`object` is EntityItem) {
+            e.addCapability(ResourceLocation(MODID, "touched"), TouchedByLingeringLewd())
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

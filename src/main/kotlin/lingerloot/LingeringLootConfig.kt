@@ -8,6 +8,8 @@ import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.config.Configuration
 import java.io.File
 
+var cfg: LingeringLootConfig? = null
+
 class LingeringLootConfig(file: File) {
     val antilag: Boolean
     var rules: Either<Rules, String>
@@ -30,6 +32,8 @@ class LingeringLootConfig(file: File) {
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
         rules = parseRules(file.resolve("lingeringloot.rules"), {LegacyRules(config)})
+
+        cfg = this
     }
 }
 

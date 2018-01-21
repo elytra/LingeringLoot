@@ -1,6 +1,7 @@
 package lingerloot.volatility.handlers
 
 import lingerloot.LingeringLootConfig
+import lingerloot.cfg
 import lingerloot.volatility.DROPS_PROFILE
 import lingerloot.volatility.FakerPlayer
 import lingerloot.volatility.scatterRemainderToTheWinds
@@ -20,8 +21,8 @@ import net.minecraftforge.common.util.FakePlayer
 import java.util.*
 
 
-fun placeAndSplitBlock(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityItem, type: ItemBlock) {
-    if (cfg.antilag && rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
+fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlock) {
+    if (cfg!!.antilag && rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
     if (entityItem.item.count <= 0) return
 
     val fakePlayer = FakerPlayer(world, entityItem)

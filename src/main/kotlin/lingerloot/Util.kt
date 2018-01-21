@@ -4,9 +4,7 @@ import com.elytradev.concrete.common.Either
 import lingerloot.ruleengine.ItemPredicate
 import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.init.Blocks
 import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
 import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldServer
@@ -27,7 +25,7 @@ val ageField by lazy { ReflectionHelper.findField(EntityItem::class.java, "age",
 fun EntityItem.extractAge(): Int { return ageField.get(this) as Int }
 
 val pickupDelayField by lazy { ReflectionHelper.findField(EntityItem::class.java, "pickupDelay", "field_145804_b") }
-fun EntityItem.getPickupDelay(): Int { return pickupDelayField.get(this) as Int }
+fun EntityItem.extractPickupDelay(): Int { return pickupDelayField.get(this) as Int }
 
 fun splitNumberEvenlyIsh(number: Int, maxSplits: Int): Collection<Int> {
     val baseSplit = number / maxSplits
@@ -38,13 +36,8 @@ fun splitNumberEvenlyIsh(number: Int, maxSplits: Int): Collection<Int> {
         .filter{it > 0}
 }
 
-fun spam(pre: String, entityItem: EntityItem) {
-    System.out.println(pre+ " " + "type: " + entityItem.javaClass.typeName + entityItem.item + " with lifespan: "+entityItem.lifespan+", age: "+entityItem.extractAge() + " and pickup delay " + entityItem.getPickupDelay())
-
-}
-
 fun detectCreativeGiveSecondTick(item: EntityItem) =
-        item.extractAge() == CREATIVE_GIVE_DESPAWN_TICK && item.getPickupDelay() == 39
+        item.extractAge() == CREATIVE_GIVE_DESPAWN_TICK && item.extractPickupDelay() == 39
 
 fun square(x: Double) = x*x
 fun square(x: Float) = x*x
