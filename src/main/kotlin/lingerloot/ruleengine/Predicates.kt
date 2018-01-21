@@ -85,7 +85,7 @@ class TagPredicate(val name: String): Predicate {
 
 enum class CausePredicates(val mask: Int): Predicate {
     PLAYERDROP(1), PLAYERLOOT(2), PLAYERMINE(4), MOBDROP(8),
-    PLAYERTOSS(16), CREATIVEGIVE(32),
+    PLAYERTOSS(16), CREATIVEGIVE(32), OTHER(64),
     PLAYERHARVEST(2+4), PLAYERCAUSED(1+2+4+16);
     override fun resolve(ctx: EvaluationContext) = ctx.causeMask and mask != 0
 }

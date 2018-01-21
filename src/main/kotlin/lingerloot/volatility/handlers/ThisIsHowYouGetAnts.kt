@@ -1,4 +1,4 @@
-package lingerloot.hardcore.handlers
+package lingerloot.volatility.handlers
 
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.monster.EntitySilverfish

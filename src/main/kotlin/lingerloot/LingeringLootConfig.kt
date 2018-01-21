@@ -1,7 +1,7 @@
 package lingerloot
 
 import com.elytradev.concrete.common.Either
-import lingerloot.ruleengine.Rule
+import lingerloot.ruleengine.Rules
 import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
@@ -9,13 +9,11 @@ import net.minecraftforge.common.config.Configuration
 import java.io.File
 
 class LingeringLootConfig(file: File) {
-    val despawns: DespawnTimes
     val shitTier: Set<Item>
     val shitTierMods: Set<String>
-    val hardcore: Boolean
-    val shiva: Boolean
+    val antilag: Boolean
     val minedPickupDelay: Int
-    var rules: Either<List<Rule>, String>
+    var rules: Either<Rules, String>
 
     init {
         val config = Configuration(file.resolve("lingeringloot.cfg"))
@@ -40,20 +38,20 @@ class LingeringLootConfig(file: File) {
             }
         }
 
-        despawns = DespawnTimes(
-                configOptionSecs(timeCategory, "player drops", 3600),
-                configOptionSecs(timeCategory, "player-killed mob drops", -1),
-                configOptionSecs(timeCategory, "player-mined items", -1),
-                configOptionSecs(timeCategory, "mob drops", -1),
-                configOptionSecs(timeCategory, "player-thrown items", -1),
-                configOptionSecs(timeCategory, "player-caused drops", 1800),
-                configOptionSecs(timeCategory, "other", 900),
-                configOptionSecs(timeCategory, "creative drops and /give", 60),
-                configOptionSecs(shitTierCategory, "shit despawn time", 300)
-        )
+//        despawns = DespawnTimes(
+//                configOptionSecs(timeCategory, "player drops", 3600),
+//                configOptionSecs(timeCategory, "player-killed mob drops", -1),
+//                configOptionSecs(timeCategory, "player-mined items", -1),
+//                configOptionSecs(timeCategory, "mob drops", -1),
+//                configOptionSecs(timeCategory, "player-thrown items", -1),
+//                configOptionSecs(timeCategory, "player-caused drops", 1800),
+//                configOptionSecs(timeCategory, "other", 900),
+//                configOptionSecs(timeCategory, "creative drops and /give", 60),
+//                configOptionSecs(shitTierCategory, "shit despawn time", 300)
+//       )
 
-        hardcore = config.getBoolean("hardcore mode", bonusCategory, false, "additional challenge features when items despawn (best used with dramatically reduced despawn times!)")
-        shiva = config.getBoolean("destroyer of worlds", bonusCategory, false, "full hardcore mode functionality without antilag features (eg block despawn chance and disabled eggs).  no effect without hardcore mode.")
+//        hardcore = config.getBoolean("hardcore mode", bonusCategory, false, "additional challenge features when items despawn (best used with dramatically reduced despawn times!)")
+        antilag = !config.getBoolean("destroyer of worlds", bonusCategory, false, "full hardcore mode functionality without antilag features (eg block despawn chance and disabled eggs).  no effect without hardcore mode.")
         minedPickupDelay = config.getInt("pickup delay", bonusCategory, 5, 0, 10, "pickup delay for player-mined items in ticks (0-10, 0 is instant and 10 is no change)")
 
         config.setCategoryComment(shitTierCategory, "The despawn time for shit-tier items, if set, overrides all other settings.")

@@ -1,4 +1,4 @@
-package lingerloot.hardcore
+package lingerloot.volatility
 
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemStack

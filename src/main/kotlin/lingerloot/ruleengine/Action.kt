@@ -1,13 +1,14 @@
 package lingerloot.ruleengine
 
 import com.elytradev.concrete.common.Either
-import lingerloot.logger
-import lingerloot.lookupItem
+import lingerloot.*
 import net.minecraft.entity.item.EntityItem
+import net.minecraft.item.ItemStack
 import net.minecraftforge.oredict.OreDictionary
+import java.util.function.Consumer
 import kotlin.reflect.KClass
 
-class EvaluationContext(val rules: List<Rule>, val item: EntityItem, val causeMask: Int) {
+class EvaluationContext(val rules: Rules, val item: EntityItem, val causeMask: Int) {
     val oreIds = OreDictionary.getOreIDs(item.item).toSet()
     val classMask = getClassMask(item.item.item)
     val tagCache = mutableMapOf<String, Boolean>()
@@ -28,15 +29,15 @@ class EvaluationContext(val rules: List<Rule>, val item: EntityItem, val causeMa
         return buf
     }
 
-    fun act() = evaluate().applyTo(item)
+    fun act() = evaluate().accept(item)
 }
 
-val expectedEffectTypes = setOf(TimerEffect::class, VolatileEffect::class, TransformEffect::class)
-class EffectBuffer {
+val expectedEffectTypes = setOf(TimerEffect::class, VolatileEffect::class,
+        TransformEffect::class, PickupDelayEffect::class)
+class EffectBuffer: Effect {
     private val effects = mutableMapOf<KClass<out Effect>, Effect>()
 
-    fun caresAbout(newEffects: List<Effect>) = newEffects.any{caresAbout(it)}
-    fun caresAbout(effect: Effect) = !effects.containsKey(effect::class)
+    fun caresAbout(newEffects: List<Effect>) = newEffects.any{!effects.containsKey(it::class)}
 
     fun update(newEffects: List<Effect>) = newEffects.forEach{
         effects.putIfAbsent(it::class, it)
@@ -44,10 +45,10 @@ class EffectBuffer {
 
     fun full() = expectedEffectTypes.all{it in effects}
 
-    fun applyTo(target: EntityItem) = effects.values.forEach{it.applyTo(target)}
+    override fun accept(target: EntityItem) = effects.values.forEach{it.accept(target)}
 }
 
-fun effect(s: String): Either<Effect, String> {
+fun effect(s: String): Either<Iterable<Effect>, String> {
     val word = s.takeWhile{it != '('}
     val param = if (word.length <= s.length)
         if (s.last() == ')')
@@ -57,41 +58,63 @@ fun effect(s: String): Either<Effect, String> {
     else
         null
 
-    return Either.left<Effect, String>(when (word) {
-        "timer" -> {TimerEffect(param?.let{
-            it.toIntOrNull()?: return Either.right("Invalid integer: \"$param\"")
-        })}
-        "convert" -> {TransformEffect(param?.let{
+    return Either.left<Iterable<Effect>, String>(when (word) {
+        "timer" -> {listOf(TimerEffect(param?.let{
+            val seconds = it.toDoubleOrNull()?: return Either.right("Invalid double: \"$param\"")
+            val ticks = (seconds * 20).toInt()
+            when (ticks) {
+                MINECRAFT_LIFESPAN -> FAKE_DEFAULT_LIFESPAN  // important to differentiate 6000 from -1
+                CREATIVE_GIVE_DESPAWN_TICK -> CREATIVE_GIVE_DISAMBIGUATE // differentiate /give fakeitems
+                else -> ticks
+            }
+        }))}
+        "convert" -> {listOf(TransformEffect(param?.let{
             val lookup = lookupItem(it)
             if (lookup.isLeft) lookup.leftNullable
             else return Either.right(lookup.rightNullable)
-        })}
-        "volatile" -> {VOL}
-        "novolatile" -> {NOVOL}
+        }))}
+        "pickupdelay" -> {listOf(PickupDelayEffect(param?.let {
+            it.toIntOrNull()?: return Either.right("Invalid int: \"$param\"")
+        }))}
+        "volatile" -> {listOf(VOL)}
+        "novolatile" -> {listOf(NOVOL)}
+        "nothing" -> {listOf(NOTIMER, NOVOL, NODELAY, NOTF)}
         else -> return Either.right("Invalid effect keyword: \"$word\"")
     })
 }
 
-interface Effect {
-    fun applyTo(i: EntityItem)
-}
+
+val VOL = VolatileEffect(true)
+val NOVOL = VolatileEffect(false)
+val NOTIMER = TimerEffect(null)
+val NODELAY = PickupDelayEffect(null)
+val NOTF = TransformEffect(null)
+
+
+typealias Effect = Consumer<EntityItem>
 
 class TimerEffect(val timer: Int?): Effect {
-    override fun applyTo(i: EntityItem) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun accept(i: EntityItem) = timer?.let{
+        i.lifespan = it
+    }?:Unit
+}
+
+class PickupDelayEffect(val delay: Int?): Effect {
+    override fun accept(i: EntityItem) = delay?.let{
+        i.setPickupDelay(it)
+    }?:Unit
 }
 
 class VolatileEffect(val volatile: Boolean): Effect {
-    override fun applyTo(i: EntityItem) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun accept(i: EntityItem) {
+        if (volatile) {
+            // TODO lurn capabilities shit
+        }
     }
 }
-val VOL = VolatileEffect(true)
-val NOVOL = VolatileEffect(false)
 
-class TransformEffect(val result: ItemPredicate?): Effect {
-    override fun applyTo(i: EntityItem) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+class TransformEffect(val replace: ItemPredicate?): Effect {
+    override fun accept(i: EntityItem) = replace?.let{
+        i.item = ItemStack(replace.item, i.item.count, replace.damage?:0)
+    }?:Unit
 }

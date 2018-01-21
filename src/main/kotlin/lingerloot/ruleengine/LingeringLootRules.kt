@@ -48,10 +48,11 @@ val defaultRules = """
 #  &tool
 #
 # Tag:
-# tagname {predicateA  predB  predC
-#    predD  predE}
-# # tagname = (A & B & C) | (D & E)
-# Note that commas can be used in place of (or in addition to) newlines because Falkreon.
+# tagname [predicateA  predB  predC,
+#    predD  predE]
+# # tag value = (A & B & C) | (D & E)
+# Note that commas are equivalent to newlines (breaking up and groups) thanks
+# to Falkreon's suggestions.  capitalthree was about to design something dumb.
 #
 #
 # Rule:
@@ -59,27 +60,32 @@ val defaultRules = """
 #
 #
 # Results:
-# timer(t)     set despawn time to t seconds
-# timer        leave default despawn time and prevent matching a lower priority timer directive
-# volatile     item will trigger special behavior when it would despawn
-# novolatile   not volatile (to override a lower priority volatile result)
-# convert(i)   transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
-# convert      prevent a lower priority convert result
+# timer(t)       set despawn time to t seconds (float)
+# pickupdelay(t) set pickup delay (time before item can be picked up) to t ticks (int)
+# volatile(h)    item will trigger special behavior when it would despawn (handler options: H = hardcore)
+# convert(i)     transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
+# nofoo          leave vanilla behavior and prevent matching a lower priority foo rule
+# nothing        no more effects.  equivalent to notimer nopickupdelay novolatile noconvert
 #
+# contradicting rules at the same priority level = unspecified behavior!
+# priority levels are your only way to guarantee rule ordering.  All rules and tags
+# can be defined in any order.
 #
-#
-#
-# contradicting rules at the same priority level = unspecified behavior
+# Effects for the same rule are always taken in order, so eg, you can do "timer(60) nothing" to
+# set a 1 minute timer and prevent further effects.  "nothing timer(60)" would always just do nothing.
+# Don't be a nothing.  Make yourself a wacky fun lingering loot ruleset today!
 
 crap [cobblestone, andesite, diorite
       granite, snowball]
 
-0 snowball -> volatile
+1 @creativeGive -> nothing
+0 snowball -> volatile(H)
 -1 @playerDrop -> timer(3600)
 -3 @playerHarvest crap -> notimer
 -5 @playerCaused -> timer(1800)
 -7 crap -> notimer
 -9 -> timer(900)
+-10 -> pickupdelay(5)
 """
 
 val commentPattern = Pattern.compile("#.*")
@@ -152,6 +158,8 @@ class RulesLevel {
     }
 }
 
+typealias Rules = Iterable<Rule>
+
 class Rule {
     val predicates = Predicates()
     val effects = mutableListOf<Effect>()
@@ -160,7 +168,7 @@ class Rule {
 
     fun addEffect(s: String): String? = effect(s).map(
             {
-                effects.add(it)
+                effects.addAll(it)
                 null
             },
             {it}
@@ -168,7 +176,7 @@ class Rule {
 }
 
 fun errMessage(ln: Int, m: String) = "Error on line $ln: $m"
-fun errEither(s: String) = Either.right<List<Rule>, String>(s)
+fun errEither(s: String) = Either.right<Rules, String>(s)
 
 
 class ParseContext {
@@ -177,7 +185,7 @@ class ParseContext {
     val tagPredicates = mutableListOf<TagPredicate>()
 }
 
-fun parseRules(fileInput: File): Either<List<Rule>, String> {
+fun parseRules(fileInput: File): Either<Rules, String> {
     if (!fileInput.exists())
         fileInput.writeText(defaultRules)
 

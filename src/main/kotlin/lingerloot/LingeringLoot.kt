@@ -1,7 +1,10 @@
 package lingerloot
 
-import lingerloot.hardcore.EntityItemExploding
-import lingerloot.hardcore.HardcoreDespawnDispatcher
+import lingerloot.ruleengine.CausePredicates
+import lingerloot.ruleengine.EvaluationContext
+import lingerloot.volatility.EntityItemExploding
+import lingerloot.ruleengine.registerCapabilities
+import lingerloot.volatility.DespawnDispatcher
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemStack
@@ -57,49 +60,43 @@ class LingeringLoot {
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
 
+        registerCapabilities()
+
         proxy?.preInit(event)
     }
 }
 
 private fun fallThrough(vararg vals: Int) = vals.firstOrNull{it >= 0} ?: FAKE_DEFAULT_LIFESPAN
 
-class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
-                               playerCaused: Int, other: Int, creative: Int, val shitTier: Int) {
-    val playerDrop  = fallThrough(playerDrop, playerCaused, mobDrop, other)
-    val playerKill  = fallThrough(playerKill, playerCaused, mobDrop, other)
-    val playerMine  = fallThrough(playerMine, playerCaused, other)
-    val mobDrop     = fallThrough(mobDrop, other)
-    val playerThrow = fallThrough(playerThrow, playerCaused, other)
-    val other       = fallThrough(other)
-    val creative    = fallThrough(creative, CREATIVE_LIFESPAN)
-}
+//class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
+//                               playerCaused: Int, other: Int, creative: Int, val shitTier: Int) {
+//    val playerDrop  = fallThrough(playerDrop, playerCaused, mobDrop, other)
+//    val playerKill  = fallThrough(playerKill, playerCaused, mobDrop, other)
+//    val playerMine  = fallThrough(playerMine, playerCaused, other)
+//    val mobDrop     = fallThrough(mobDrop, other)
+//    val playerThrow = fallThrough(playerThrow, playerCaused, other)
+//    val other       = fallThrough(other)
+//    val creative    = fallThrough(creative, CREATIVE_LIFESPAN)
+//}
 
-val prescreen = HashSet<EntityItem>()
+/*
+
+            prescreen.add(i)
+ */
+
+val prescreen = mutableMapOf<EntityItem, Int>()
 
 class EventHandler(val cfg: LingeringLootConfig) {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
-    private fun adjustDespawn(itemDrop: EntityItem, target: Int) {
-        if (itemDrop.lifespan == MINECRAFT_LIFESPAN) {
-            val item = itemDrop.item.item
-            itemDrop.lifespan =
-                    if (cfg.despawns.shitTier >= 0 &&
-                            (item in cfg.shitTier || item.registryName?.resourceDomain in cfg.shitTierMods))
-                        cfg.despawns.shitTier
-                    else
-                        target
-        }
-
-        val q = ::LingeringLoot
-
-
-        prescreen.add(itemDrop)
+    fun applyRules(item: EntityItem, causeMask: Int) = cfg.rules.mapLeft {
+        EvaluationContext(it, item, causeMask).act()
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onPlayerTossItem(event: ItemTossEvent) {
         if (! event.entityItem.entityWorld.isRemote)
-            adjustDespawn(event.entityItem, cfg.despawns.playerThrow)
+            prescreen.putIfAbsent(event.entityItem, CausePredicates.PLAYERTOSS.mask)
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -107,11 +104,11 @@ class EventHandler(val cfg: LingeringLootConfig) {
         if (event.entity.entityWorld.isRemote) return
 
         val target = if (event.entityLiving is EntityPlayer)
-                cfg.despawns.playerDrop
+                CausePredicates.PLAYERDROP
             else if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
-                cfg.despawns.playerKill else cfg.despawns.mobDrop
+                CausePredicates.PLAYERLOOT else CausePredicates.MOBDROP
 
-        for (drop in event.drops) adjustDespawn(drop, target)
+        for (drop in event.drops) prescreen.putIfAbsent(drop, target.mask)
     }
 
     var playerHarvested = mutableSetOf<ItemStack>()
@@ -131,40 +128,36 @@ class EventHandler(val cfg: LingeringLootConfig) {
         if (entity is EntityItem) {
             val target = if (playerHarvested.remove(entity.item)) {
                 if (cfg.minedPickupDelay != DEFAULT_PICKUP_DELAY) entity.setPickupDelay(cfg.minedPickupDelay)
-                cfg.despawns.playerMine
+                CausePredicates.PLAYERMINE
             } else {
-                cfg.despawns.other
+                CausePredicates.OTHER
             }
 
-            adjustDespawn(entity, target)
+            prescreen.putIfAbsent(entity, target.mask)
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onItemDespawn(event: ItemExpireEvent) {
-        if (cfg.hardcore && !event.entity.entityWorld.isRemote)
-            HardcoreDespawnDispatcher.dispatch(cfg, event)
+        if (!event.entity.entityWorld.isRemote)
+            DespawnDispatcher.dispatch(cfg, event)
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onServerTick(event: TickEvent.ServerTickEvent) {
         if (event.phase == TickEvent.Phase.START) {
-            prescreen.removeAll {
-                correctForCreativeGive(it)
-                jitterSluice.prepareToDie(it)
-                true
+            prescreen.forEach { item, causemask ->
+                val causemaskCreative = if (detectCreativeGiveSecondTick(item))
+                    CausePredicates.CREATIVEGIVE.mask
+                else
+                    causemask
+
+                applyRules(item, causemaskCreative)
+                jitterSluice.prepareToDie(item)
             }
+            prescreen.clear()
             jitterSluice.tick()
         }
-    }
-
-    /**
-     * attempts to detect /give and creative-mode-dropped items to restore the expected 1 minute despawn timer
-     * @return whether change was required
-     */
-    fun correctForCreativeGive(item: EntityItem) {
-        if (detectCreativeGiveSecondTick(item))
-            item.lifespan = CREATIVE_GIVE_DESPAWN_TICK + cfg.despawns.creative
     }
 
     @SubscribeEvent

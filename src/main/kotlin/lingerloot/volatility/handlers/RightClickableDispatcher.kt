@@ -1,9 +1,9 @@
-package lingerloot.hardcore.handlers
+package lingerloot.volatility.handlers
 
 import lingerloot.LingeringLootConfig
 import lingerloot.blockAreaOfEffectForEntityAirLast
-import lingerloot.hardcore.FakerPlayer
-import lingerloot.hardcore.scatterRemainderToTheWinds
+import lingerloot.volatility.FakerPlayer
+import lingerloot.volatility.scatterRemainderToTheWinds
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.init.Items
 import net.minecraft.item.Item
@@ -32,7 +32,7 @@ fun attemptUseStack(cfg: LingeringLootConfig, world: WorldServer, entityItem: En
             break
     }
 
-    if (!cfg.shiva && type is ItemEgg) entityItem.item = ItemStack(Items.SNOWBALL, entityItem.item.count)
+    if (cfg.antilag && type is ItemEgg) entityItem.item = ItemStack(Items.SNOWBALL, entityItem.item.count)
 
     for (i in (1..3)) {
         fakePlayer.randomLook()

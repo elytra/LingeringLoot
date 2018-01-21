@@ -1,9 +1,9 @@
-package lingerloot.hardcore.handlers
+package lingerloot.volatility.handlers
 
 import lingerloot.LingeringLootConfig
-import lingerloot.hardcore.DROPS_PROFILE
-import lingerloot.hardcore.FakerPlayer
-import lingerloot.hardcore.scatterRemainderToTheWinds
+import lingerloot.volatility.DROPS_PROFILE
+import lingerloot.volatility.FakerPlayer
+import lingerloot.volatility.scatterRemainderToTheWinds
 import lingerloot.rand
 import net.minecraft.block.BlockFalling
 import net.minecraft.block.material.EnumPushReaction
@@ -21,7 +21,7 @@ import java.util.*
 
 
 fun placeAndSplitBlock(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityItem, type: ItemBlock) {
-    if (!cfg.shiva && rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
+    if (cfg.antilag && rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
     if (entityItem.item.count <= 0) return
 
     val fakePlayer = FakerPlayer(world, entityItem)

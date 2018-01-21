@@ -1,13 +1,13 @@
-package lingerloot.hardcore
+package lingerloot.volatility
 
 import lingerloot.*
-import lingerloot.hardcore.handlers.*
+import lingerloot.volatility.handlers.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.*
 import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
-object HardcoreDespawnDispatcher {
+object DespawnDispatcher {
     fun dispatch(cfg: LingeringLootConfig, event: ItemExpireEvent) {
         val entityItem = event.entityItem
         if (entityItem.item.count <= 0) return
@@ -34,6 +34,10 @@ object HardcoreDespawnDispatcher {
             is Item -> attemptUseStack(cfg, world, entityItem, type, event)
         }
     }
+}
+
+interface DespawnBehaviorSet {
+
 }
 
 fun EntityItem.jumpAround() {

@@ -1,7 +1,7 @@
-package lingerloot.hardcore.handlers
+package lingerloot.volatility.handlers
 
-import lingerloot.hardcore.FakerPlayer
-import lingerloot.hardcore.jumpAround
+import lingerloot.volatility.FakerPlayer
+import lingerloot.volatility.jumpAround
 import lingerloot.rand
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.item.EntityItem
