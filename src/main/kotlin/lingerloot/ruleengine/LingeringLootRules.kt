@@ -209,7 +209,7 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
     }
 
     if (crap) {
-        builder.appendln("-2 @playerHarvest crap -> timer(${legacyRules.despawns.shitTier})")
+        builder.appendln("-2 @playerHarvest %crap -> timer(${legacyRules.despawns.shitTier})")
     }
 
     if (legacyRules.despawns.playerToss >= 0) {
@@ -229,7 +229,7 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
     }
 
     if (crap) {
-        builder.appendln("-6 crap -> timer(${legacyRules.despawns.shitTier})")
+        builder.appendln("-6 %crap -> timer(${legacyRules.despawns.shitTier})")
     }
 
     if (legacyRules.despawns.mobDrop >= 0) {
