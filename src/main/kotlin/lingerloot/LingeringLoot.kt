@@ -66,23 +66,6 @@ class LingeringLoot {
     }
 }
 
-private fun fallThrough(vararg vals: Int) = vals.firstOrNull{it >= 0} ?: FAKE_DEFAULT_LIFESPAN
-
-//class DespawnTimes(playerDrop: Int, playerKill: Int, playerMine: Int, mobDrop: Int, playerThrow: Int,
-//                               playerCaused: Int, other: Int, creative: Int, val shitTier: Int) {
-//    val playerDrop  = fallThrough(playerDrop, playerCaused, mobDrop, other)
-//    val playerKill  = fallThrough(playerKill, playerCaused, mobDrop, other)
-//    val playerMine  = fallThrough(playerMine, playerCaused, other)
-//    val mobDrop     = fallThrough(mobDrop, other)
-//    val playerThrow = fallThrough(playerThrow, playerCaused, other)
-//    val other       = fallThrough(other)
-//    val creative    = fallThrough(creative, CREATIVE_LIFESPAN)
-//}
-
-/*
-
-            prescreen.add(i)
- */
 
 val prescreen = mutableMapOf<EntityItem, Int>()
 
@@ -106,12 +89,12 @@ class EventHandler(val cfg: LingeringLootConfig) {
         val target = if (event.entityLiving is EntityPlayer)
                 CausePredicates.PLAYERDROP
             else if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
-                CausePredicates.PLAYERLOOT else CausePredicates.MOBDROP
+                CausePredicates.PLAYERKILL else CausePredicates.MOBDROP
 
         for (drop in event.drops) prescreen.putIfAbsent(drop, target.mask)
     }
 
-    var playerHarvested = mutableSetOf<ItemStack>()
+    private var playerHarvested = mutableSetOf<ItemStack>()
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onHarvestDrops(event: HarvestDropsEvent) {
@@ -127,7 +110,6 @@ class EventHandler(val cfg: LingeringLootConfig) {
         val entity = event.entity
         if (entity is EntityItem) {
             val target = if (playerHarvested.remove(entity.item)) {
-                if (cfg.minedPickupDelay != DEFAULT_PICKUP_DELAY) entity.setPickupDelay(cfg.minedPickupDelay)
                 CausePredicates.PLAYERMINE
             } else {
                 CausePredicates.OTHER

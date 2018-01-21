@@ -1,11 +1,13 @@
 package lingerloot.ruleengine
 
 import com.elytradev.concrete.common.Either
+import lingerloot.DEFAULT_PICKUP_DELAY
+import lingerloot.LegacyRules
 import java.io.*
 import java.util.*
 import java.util.regex.Pattern
 
-val defaultRules = """
+val documentation = """
 # Hi!  I'm Nikky!  capitalthree kidnapped me and they won't let me go until I
 # explain this stupid new config format to you.  capitalthree threw out the nice
 # simple config format you're used to and replaced it with this confusing mess,
@@ -29,13 +31,18 @@ val defaultRules = """
 # Cause refers to the conditions that caused the item to drop, as in the classic
 # lingering loot config. They are:
 #  @playerDrop
-#  @playerHarvest (playerLoot | playerMine)
-#  @playerLoot
+#  @playerHarvest (playerKill | playerMine)
+#  @playerKill
 #  @playerMine
 #  @mobDrop
 #  @playerToss
 #  @playerCaused (playerToss | playerHarvest | playerDrop)
 #  @creativeGive
+#  @other
+#
+# Note that other works differently from in the old config.  Other only applies if no
+# other causes apply, regardless of whether other rules were matched.  To provide a
+# fallthrough value, just make a rule with fewer or no predicates at a lower priority level.
 #
 # Some of the causes are sets of certain other causes, provided for convenience.
 # As if there's anything convenient about-  eeeep!  Okay, okay, I'll read it!
@@ -75,17 +82,6 @@ val defaultRules = """
 # set a 1 minute timer and prevent further effects.  "nothing timer(60)" would always just do nothing.
 # Don't be a nothing.  Make yourself a wacky fun lingering loot ruleset today!
 
-crap [cobblestone, andesite, diorite
-      granite, snowball]
-
-1 @creativeGive -> nothing
-0 snowball -> volatile(H)
--1 @playerDrop -> timer(3600)
--3 @playerHarvest crap -> notimer
--5 @playerCaused -> timer(1800)
--7 crap -> notimer
--9 -> timer(900)
--10 -> pickupdelay(5)
 """
 
 val commentPattern = Pattern.compile("#.*")
@@ -185,9 +181,74 @@ class ParseContext {
     val tagPredicates = mutableListOf<TagPredicate>()
 }
 
-fun parseRules(fileInput: File): Either<Rules, String> {
+fun generateDefaultRules(legacyRules: LegacyRules): String {
+    val builder = StringBuilder(documentation)
+    val crap = legacyRules.shitTier.isNotEmpty() || legacyRules.shitTierMods.isNotEmpty()
+    if (crap) {
+        builder.append("crap [")
+        if (legacyRules.shitTier.isNotEmpty()) {
+            builder.appendln(legacyRules.shitTier.map { it.registryName.toString() }.joinToString(", "))
+        }
+        if (legacyRules.shitTierMods.isNotEmpty()) {
+            builder.append(legacyRules.shitTierMods.map { ":$it" }.joinToString(", "))
+        }
+        builder.appendln("]\n")
+    }
+
+    builder.append("1 @creativeGive -> ")
+    if (legacyRules.despawns.creative >= 0) builder.append("timer(${legacyRules.despawns.creative}) ")
+    builder.appendln("nothing")
+
+    builder.append("0 ")
+    if (!legacyRules.hardcore) builder.append("snowball ")
+    builder.appendln("-> volatile(H)")
+
+    if (legacyRules.despawns.playerDrop >= 0) {
+        builder.appendln("-1 @playerDrop -> timer(${legacyRules.despawns.playerDrop})")
+    }
+
+    if (crap) {
+        builder.appendln("-2 @playerHarvest crap -> timer(${legacyRules.despawns.shitTier})")
+    }
+
+    if (legacyRules.despawns.playerToss >= 0) {
+        builder.appendln("-3 @playerToss -> timer(${legacyRules.despawns.playerToss})")
+    }
+
+    if (legacyRules.despawns.playerMine >= 0) {
+        builder.appendln("-3 @playerMine -> timer(${legacyRules.despawns.playerMine})")
+    }
+
+    if (legacyRules.despawns.playerKill >= 0) {
+        builder.appendln("-3 @playerKill -> timer(${legacyRules.despawns.playerKill})")
+    }
+
+    if (legacyRules.despawns.playerCaused >= 0) {
+        builder.appendln("-5 @playerCaused -> timer(${legacyRules.despawns.playerCaused})")
+    }
+
+    if (crap) {
+        builder.appendln("-6 crap -> timer(${legacyRules.despawns.shitTier})")
+    }
+
+    if (legacyRules.despawns.mobDrop >= 0) {
+        builder.appendln("-7 @mobDrop -> timer(${legacyRules.despawns.mobDrop})")
+    }
+
+    if (legacyRules.despawns.other >= 0) {
+        builder.appendln("-8 -> timer(${legacyRules.despawns.other})")
+    }
+
+    if (legacyRules.minedPickupDelay != DEFAULT_PICKUP_DELAY) {
+        builder.appendln("-9 @playerMine -> pickupdelay(${legacyRules.minedPickupDelay})")
+    }
+
+    return builder.toString()
+}
+
+fun parseRules(fileInput: File, legacyRules: () -> LegacyRules): Either<Rules, String> {
     if (!fileInput.exists())
-        fileInput.writeText(defaultRules)
+        fileInput.writeText(generateDefaultRules(legacyRules()))
 
     val rules = RulesAggregator()
     val ctx = ParseContext()
