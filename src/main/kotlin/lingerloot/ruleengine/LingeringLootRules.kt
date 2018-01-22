@@ -185,7 +185,6 @@ fun errEither(s: String) = Either.right<Rules, String>(s)
 class ParseContext {
     val tags = mutableMapOf<String, List<Predicates>>()
     val predicateCache = mutableMapOf<String, Predicate>()
-    val tagPredicates = mutableListOf<TagPredicate>()
 }
 
 fun generateDefaultRules(legacyRules: LegacyRules): String {
@@ -285,7 +284,7 @@ fun parseRules(fileInput: File): Either<Rules, String> {
         }
     }
 
-    ctx.tagPredicates.forEach({
+    ctx.predicateCache.values.filterIsInstance<TagPredicate>().forEach({
         val tag = ctx.tags[it.name] ?: return errEither("Tag referenced but never defined: \"${it.name}\"")
         it.predicateses = tag
     })
