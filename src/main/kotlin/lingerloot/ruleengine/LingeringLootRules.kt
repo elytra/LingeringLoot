@@ -18,13 +18,14 @@ val documentation = """
 
 # Predicates:
 #  itemname
-#   - This can be a vanilla itemname, or modname:itemname, itemname@damage, or both
+#   - This can be a vanilla itemname, or modid:itemname, itemname@damage, etc
 #  ${'$'}oredictName
 #  %tagname
 #  @cause
 #  &class
 #  :modid
-#  !not
+#   - Note that these cannot be checked for correctness at rules load time
+#  !negated
 
 # Cause refers to the conditions that caused the item to drop, as in the classic lingering loot config. They are:
 #  @playerDrop
@@ -86,6 +87,10 @@ val documentation = """
 # Maybe you loved lingering loot hardcore mode but hated the silverfish?  Now you can just change your hardcore mode
 # rule to exclude foods!
 # | 0 !&food -> despawn(H)
+
+# Want a quick and dirty way to let players convert an item into another?  Make a rule for when players toss it, and
+# set the pickup delay to 0 so they get the result instantly!
+# | 1 @playerToss someitem -> convert(otheritem) pickupdelay(0) finalize
 
 # There.  What more could you want from me?  Make yourself a wacky fun lingering loot ruleset today!  I'm freeeeeeeeeee!
 
