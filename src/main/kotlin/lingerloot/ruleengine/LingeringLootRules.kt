@@ -60,24 +60,32 @@ val documentation = """
 # anyone would have been surprised if capitalthree pulled that stunt... yaaugh ok,
 # ok, no tickling!  ...So that's why we have rules, which can have effects!
 # | priority     (predicate...)   ->   effect   (effect...)
+# Priority is an integer, obviously.  A rule with no predicates will always match.
 
-# Priority is an integer, obviously.  A rule with no predicates will always match at its priority level, so be careful.
-# If you have multiple rules that can match at the same priority level and have the same effects, the one that occurs
-# first in the file wins.
+# There are 4 categories of effects, and for each, the highest priority rule takes precedence, but if a rule provides
+# some effects, lower priority rules can still match and provide different effects.  If two rules have the same
+# priority, the first one comes first.
 
-# Matching one rule just prevents a later rule from replacing its effects, but doesn't prevent them from adding separate
-# effects.  To make a rule terminal, simply add "finalize" at the end of the effects, which adds all no-op effects.
+# To make a rule terminal, simply add "finalize" at the end of the effects, which adds all no-op effects.  Effects from
+# the same rule are applied in-order, so for example any effect after "finalize" in a rule is ignored.
 
-# Effects from the same rule are applied in-order, so if you put finalize at the *beginning* of your effects, none of the
-# other ones will happen.
-
-# And now surely by now you want to know what this dumb mod can actually make items do?  Well here are the effects:
+# And now surely by now you want to know what this overengineered pile of... yeeep!  Okayyy put away that feather!  So
+# what can this mod actually make items do?  Well here are the actual effects:
 # timer(t)       set despawn time to t seconds (float)
 # pickupdelay(t) set pickup delay (time before item can be picked up) to t ticks (int)
 # despawn(h)     item will trigger special behavior when it would despawn (handler options: H = hardcore)
 # convert(i)     transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
 # any of the above but without a param: leaves vanilla behavior alone and prevents matching a lower priority rule
 # finalize       no more effects.  shorthand for timer pickupdelay despawn convert
+
+# One particular use case you might want to be aware of is ore deduplication at the time of mining.  This is the
+# primary intended purpose of the convert effect (though you can use it for whatever you like).  To deduplicate an ore
+# type, make a convert rule that matches on the oredict name and converts to your favorite example of that ore.  Like:
+# | 0 ${'$'}ingotBronze -> convert(embers:ingot_bronze)
+
+# Maybe you loved lingering loot hardcore mode but hated the silverfish?  Now you can just change your hardcore mode
+# rule to exclude foods!
+# | 0 !&food -> despawn(H)
 
 # There.  What more could you want from me?  Make yourself a wacky fun lingering loot ruleset today!  I'm freeeeeeeeeee!
 
