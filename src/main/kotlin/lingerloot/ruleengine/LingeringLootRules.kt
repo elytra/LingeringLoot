@@ -66,9 +66,9 @@ val documentation = """
 # first in the file wins.
 
 # Matching one rule just prevents a later rule from replacing its effects, but doesn't prevent them from adding separate
-# effects.  To make a rule terminal, simply add "nothing" at the end of the effects, which adds all no-op effects.
+# effects.  To make a rule terminal, simply add "finalize" at the end of the effects, which adds all no-op effects.
 
-# Effects from the same rule are applied in-order, so if you put nothing at the *beginning* of your effects, none of the
+# Effects from the same rule are applied in-order, so if you put finalize at the *beginning* of your effects, none of the
 # other ones will happen.
 
 # And now surely by now you want to know what this dumb mod can actually make items do?  Well here are the effects:
@@ -77,7 +77,7 @@ val documentation = """
 # despawn(h)     item will trigger special behavior when it would despawn (handler options: H = hardcore)
 # convert(i)     transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
 # any of the above but without a param: leaves vanilla behavior alone and prevents matching a lower priority rule
-# nothing        no more effects.  shorthand for timer pickupdelay despawn convert
+# finalize       no more effects.  shorthand for timer pickupdelay despawn convert
 
 # There.  What more could you want from me?  Make yourself a wacky fun lingering loot ruleset today!  I'm freeeeeeeeeee!
 
@@ -197,7 +197,7 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
 
     builder.append("1 @creativeGive -> ")
     if (legacyRules.despawns.creative >= 0) builder.append("timer(${legacyRules.despawns.creative}) ")
-    builder.appendln("nothing")
+    builder.appendln("finalize")
 
     builder.append("0 ")
     if (!legacyRules.hardcore) builder.append("snowball ")

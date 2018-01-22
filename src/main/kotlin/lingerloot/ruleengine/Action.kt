@@ -98,7 +98,7 @@ fun effect(s: String): Either<Iterable<Effect>, String> {
             if (handlerCode !in despawnHandlerSetsByShort) return Either.right("Invalid despawn handler code: $param")
             VolatileEffect(handlerCode)
         })}
-        "nothing" -> {listOf(NOTIMER, NOVOL, NODELAY, NOTF)}
+        "finalize" -> {listOf(NOTIMER, NOVOL, NODELAY, NOTF)}
         else -> return Either.right("Invalid effect keyword: \"$word\"")
     })
 }
