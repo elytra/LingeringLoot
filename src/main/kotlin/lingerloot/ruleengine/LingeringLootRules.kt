@@ -9,15 +9,13 @@ import java.util.*
 import java.util.regex.Pattern
 
 val documentation = """
-# Hi!  I'm Nikky!  capitalthree kidnapped me and they won't let me go until I
-# explain this stupid new config format to you.  capitalthree threw out the nice
-# simple config format you're used to and replaced it with this confusing mess,
+# Hi!  I'm Nikky!  capitalthree kidnapped me and they won't let me go until I explain this stupid new config format to
+# you.  capitalthree threw out the nice simple config format you're used to and replaced it with this confusing mess,
 # so let's just get this over with so I can go back to working on modpacker tools.
-#
-# The first thing you need to know about is predicates.  If you don't know what
-# those are, you shouldn't even be... eeep!  that tickles!  okay, okay, I'll be
-# nice!  Predicates are the fundamental tests you can filter on in your rules.
-#
+
+# The first thing you need to know about is predicates.  If you don't know what those are, you shouldn't even be...
+# eeep!  that tickles!  okay, okay, I'll be nice!  Predicates are the fundamental tests you can filter on in your rules.
+
 # Predicates:
 #  itemname
 #   - This can be a vanilla itemname, or modname:itemname, itemname@damage, or both
@@ -27,61 +25,61 @@ val documentation = """
 #  &class
 #  :modid
 #  !not
-#
-#
-# Cause refers to the conditions that caused the item to drop, as in the classic
-# lingering loot config. They are:
+
+# Cause refers to the conditions that caused the item to drop, as in the classic lingering loot config. They are:
 #  @playerDrop
-#  @playerHarvest (playerKill | playerMine)
+#  @playerHarvest = @playerKill | @playerMine
 #  @playerKill
 #  @playerMine
 #  @mobDrop
 #  @playerToss
-#  @playerCaused (playerToss | playerHarvest | playerDrop)
+#  @playerCaused = @playerToss | @playerHarvest | @playerDrop
 #  @creativeGive
 #  @other
-#
-# Note that other works differently from in the old config.  Other only applies if no
-# other causes apply, regardless of whether other rules were matched.  To provide a
-# fallthrough value, just make a rule with fewer or no predicates at a lower priority level.
-#
-# Some of the causes are sets of certain other causes, provided for convenience.
-# As if there's anything convenient about-  eeeep!  Okay, okay, I'll read it!
-#
-# Class refers to certain classes of items, which correspond to actual subclasses
-# of Item in the game.
+
+# Note that other works differently from in the old config.  Other only applies if no other causes apply, regardless of
+# whether other rules were matched.  To provide a fallthrough value, just make a rule with fewer or no predicates at a
+# lower priority level.
+
+# Some of the causes are sets of certain other causes, provided for convenience.  As if there's anything convenient
+# about-  eeeep!  Okay, okay, I'll read it! Class refers to certain classes of items, as follows:
 #  &armor
 #  &block
 #  &food
 #  &tool
-#
-# Tag:
-# tagname [predicateA  predB  predC,
-#    predD  predE]
-# # tag value = (A & B & C) | (D & E)
-# Note that commas are equivalent to newlines (breaking up and groups) thanks
-# to Falkreon's suggestions.  capitalthree was about to design something dumb.
-#
-#
-# Rule:
-# priority     predicate    (predicate...)   ->   result   (result...)
-#
-#
-# Results:
+
+# Tag predicates must match an actual tag you have... I mean duh... here's how you define a tag:
+# | tagname [predicateA  predB  predC,
+# |    predD  predE]
+
+# The tag's value would be, stated mathematically, (A & B & C) | (D & E)
+# Note that commas are equivalent to newlines (breaking up and groups) thanks to
+# Falkreon's suggestions.  capitalthree was about to design something dumb otherwise.
+
+# Now it wouldn't be much use to just define a bunch of tags, right?  Not that
+# anyone would have been surprised if capitalthree pulled that stunt... yaaugh ok,
+# ok, no tickling!  ...So that's why we have rules, which can have effects!
+# | priority     (predicate...)   ->   effect   (effect...)
+
+# Priority is an integer, obviously.  A rule with no predicates will always match at its priority level, so be careful.
+# If you have multiple rules that can match at the same priority level and have the same effects, the one that occurs
+# first in the file wins.
+
+# Matching one rule just prevents a later rule from replacing its effects, but doesn't prevent them from adding separate
+# effects.  To make a rule terminal, simply add "nothing" at the end of the effects, which adds all no-op effects.
+
+# Effects from the same rule are applied in-order, so if you put nothing at the *beginning* of your effects, none of the
+# other ones will happen.
+
+# And now surely by now you want to know what this dumb mod can actually make items do?  Well here are the effects:
 # timer(t)       set despawn time to t seconds (float)
 # pickupdelay(t) set pickup delay (time before item can be picked up) to t ticks (int)
 # despawn(h)     item will trigger special behavior when it would despawn (handler options: H = hardcore)
 # convert(i)     transform into same-sized stack of item i (note that any predicate matching is still based on the original item)
 # any of the above but without a param: leaves vanilla behavior alone and prevents matching a lower priority rule
 # nothing        no more effects.  shorthand for timer pickupdelay despawn convert
-#
-# contradicting rules at the same priority level = unspecified behavior!
-# priority levels are your only way to guarantee rule ordering.  All rules and tags
-# can be defined in any order.
-#
-# Effects for the same rule are always taken in order, so eg, you can do "timer(60) nothing" to
-# set a 1 minute timer and prevent further effects.  "nothing timer(60)" would always just do nothing.
-# Don't be a nothing.  Make yourself a wacky fun lingering loot ruleset today!
+
+# There.  What more could you want from me?  Make yourself a wacky fun lingering loot ruleset today!  I'm freeeeeeeeeee!
 
 """
 
