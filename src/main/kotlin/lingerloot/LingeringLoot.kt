@@ -1,10 +1,7 @@
 package lingerloot
 
-import lingerloot.ruleengine.CausePredicates
-import lingerloot.ruleengine.EvaluationContext
-import lingerloot.ruleengine.TouchedByLingeringLewd
+import lingerloot.ruleengine.*
 import lingerloot.volatility.EntityItemExploding
-import lingerloot.ruleengine.registerCapabilities
 import lingerloot.volatility.DespawnDispatcher
 import net.minecraft.entity.Entity
 import net.minecraft.entity.item.EntityItem
@@ -22,6 +19,7 @@ import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.SidedProxy
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent
 import net.minecraftforge.fml.common.eventhandler.EventPriority
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
@@ -52,7 +50,7 @@ var logger: Logger? = null
 
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
-@Mod(modid = MODID, version = "3.0", acceptableRemoteVersions="*")
+@Mod(modid = MODID, version = "4.0", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
@@ -69,6 +67,9 @@ class LingeringLoot {
 
         proxy?.preInit(event)
     }
+
+    @Mod.EventHandler
+    fun start(e: FMLServerStartingEvent) = e.registerServerCommand(ReloadRulesCommand)
 }
 
 
@@ -134,7 +135,7 @@ class EventHandler() {
     @SubscribeEvent
     fun onCapabilityAttachEntity(e: AttachCapabilitiesEvent<Entity>) {
         if (e.`object` is EntityItem) {
-            e.addCapability(ResourceLocation(MODID, "touched"), TouchedByLingeringLewd())
+            e.addCapability(ResourceLocation(MODID, "touched"), TouchedByLingeringLewd)
         }
     }
 

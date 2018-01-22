@@ -1,5 +1,6 @@
 package lingerloot
 
+import com.elytradev.concrete.common.Either
 import lingerloot.ruleengine.Rules
 import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item
@@ -12,6 +13,8 @@ var cfg: LingeringLootConfig? = null
 class LingeringLootConfig(file: File) {
     val antilag: Boolean
     var rules: Rules? = null
+    private val rulesFile: File
+    val legacyRules: LegacyRules
 
     init {
         val config = Configuration(file.resolve("lingeringloot.cfg"))
@@ -28,14 +31,18 @@ class LingeringLootConfig(file: File) {
                         "setting, this file is now defunct (unless you delete lingeringloot.rules to have it recreated)")
         if (config.hasChanged()) config.save()
 
+        cfg = this
+
+        legacyRules = LegacyRules(config)
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
-        parseRules(file.resolve("lingeringloot.rules"), {LegacyRules(config)}).map(
-            {rules = it},
-            {logger?.error(it)}
-        )
+        rulesFile = file.resolve("lingeringloot.rules")
+        reloadRules().map({logger?.info(it)}, {logger?.error(it)})
+    }
 
-        cfg = this
+    fun reloadRules() = parseRules(rulesFile).mapLeft{
+        rules = it
+        "Loaded ${it.count()} rules."
     }
 }
 

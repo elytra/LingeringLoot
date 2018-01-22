@@ -19,10 +19,10 @@ val VOLTAG = "volatile"
 val TAGTYPE_ID_SHORT = NBTTagShort().id
 
 fun registerCapabilities() {
-    CapabilityManager.INSTANCE.register(TouchedByLingeringLewd::class.java, TouchedStorage(), {TouchedByLingeringLewd()})
+    CapabilityManager.INSTANCE.register(TouchedByLingeringLewd::class.java, TouchedStorage, {TouchedByLingeringLewd})
 }
 
-class TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompound> {
+object TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompound> {
     var despawnHandler: DespawnHandlerSet? = null
 
     override fun serializeNBT(): NBTTagCompound {
@@ -46,7 +46,7 @@ class TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompou
 
 }
 
-private class TouchedStorage: Capability.IStorage<TouchedByLingeringLewd> {
+private object TouchedStorage: Capability.IStorage<TouchedByLingeringLewd> {
     override fun writeNBT(capability: Capability<TouchedByLingeringLewd>?, instance: TouchedByLingeringLewd?,
                           side: EnumFacing?) = instance?.serializeNBT()?:NBTTagCompound()
     override fun readNBT(capability: Capability<TouchedByLingeringLewd>?, instance: TouchedByLingeringLewd?,

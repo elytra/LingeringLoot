@@ -3,6 +3,7 @@ package lingerloot.ruleengine
 import com.elytradev.concrete.common.Either
 import lingerloot.DEFAULT_PICKUP_DELAY
 import lingerloot.LegacyRules
+import lingerloot.cfg
 import java.io.*
 import java.util.*
 import java.util.regex.Pattern
@@ -247,9 +248,9 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
     return builder.toString()
 }
 
-fun parseRules(fileInput: File, legacyRules: () -> LegacyRules): Either<Rules, String> {
+fun parseRules(fileInput: File): Either<Rules, String> {
     if (!fileInput.exists())
-        fileInput.writeText(generateDefaultRules(legacyRules()))
+        fileInput.writeText(generateDefaultRules(cfg!!.legacyRules))
 
     val rules = RulesAggregator()
     val ctx = ParseContext()
