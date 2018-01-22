@@ -125,9 +125,11 @@ class PickupDelayEffect(val delay: Int?): Effect {
 }
 
 class VolatileEffect(val handlerSet: Short?): Effect {
-    override fun accept(i: EntityItem) {if (handlerSet != null) {
-        i.getCapability(TOUCHED_CAP!!, null)?.despawnHandler = despawnHandlerSetsByShort[handlerSet]
-    }}
+    override fun accept(i: EntityItem) {
+        if (handlerSet != null) {
+            i.getCapability(TOUCHED_CAP!!, null)?.despawnHandler = despawnHandlerSetsByShort[handlerSet]
+        }
+    }
 }
 
 class TransformEffect(val replace: ItemPredicate?): Effect {

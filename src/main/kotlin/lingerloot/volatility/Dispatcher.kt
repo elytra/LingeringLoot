@@ -11,15 +11,11 @@ import net.minecraftforge.event.entity.item.ItemExpireEvent
 object DespawnDispatcher {
     fun dispatch(event: ItemExpireEvent) {
         val entityItem = event.entityItem
-        if (entityItem.item.count <= 0) return
-        val world = entityItem.entityWorld as? WorldServer ?: return
-
-        if (detectCreativeGiveSecondTick(entityItem)) {
-            event.isCanceled = true
-            return
-        }
 
         prescreen.remove(entityItem)
+
+        if (entityItem.item.count <= 0) return
+        val world = entityItem.entityWorld as? WorldServer ?: return
 
         entityItem.getCapability(TOUCHED_CAP!!, null)
                 ?.despawnHandler?.handle(world, entityItem, entityItem.item.item, event)

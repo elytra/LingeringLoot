@@ -135,7 +135,7 @@ class EventHandler() {
     @SubscribeEvent
     fun onCapabilityAttachEntity(e: AttachCapabilitiesEvent<Entity>) {
         if (e.`object` is EntityItem) {
-            e.addCapability(ResourceLocation(MODID, "touched"), TouchedByLingeringLewd)
+            e.addCapability(ResourceLocation(MODID, "touched"), TouchedByLingeringLewd())
         }
     }
 

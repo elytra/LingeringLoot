@@ -1,6 +1,5 @@
 package lingerloot
 
-import com.elytradev.concrete.common.Either
 import lingerloot.ruleengine.Rules
 import lingerloot.ruleengine.parseRules
 import net.minecraft.item.Item

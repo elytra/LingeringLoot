@@ -19,10 +19,10 @@ val VOLTAG = "volatile"
 val TAGTYPE_ID_SHORT = NBTTagShort().id
 
 fun registerCapabilities() {
-    CapabilityManager.INSTANCE.register(TouchedByLingeringLewd::class.java, TouchedStorage, {TouchedByLingeringLewd})
+    CapabilityManager.INSTANCE.register(TouchedByLingeringLewd::class.java, TouchedStorage, {TouchedByLingeringLewd()})
 }
 
-object TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompound> {
+class TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompound> {
     var despawnHandler: DespawnHandlerSet? = null
 
     override fun serializeNBT(): NBTTagCompound {
@@ -34,16 +34,17 @@ object TouchedByLingeringLewd: ICapabilityProvider, INBTSerializable<NBTTagCompo
     }
 
     override fun deserializeNBT(nbt: NBTTagCompound?) {
-        if (nbt != null && nbt.hasKey(VOLTAG, TAGTYPE_ID_SHORT.toInt()))
+        if (nbt != null && nbt.hasKey(VOLTAG, TAGTYPE_ID_SHORT.toInt())) {
             despawnHandler = despawnHandlerSetsByShort[nbt.getShort(VOLTAG)]
+        }
     }
-
 
     override fun hasCapability(capability: Capability<*>, facing: EnumFacing?) = capability == TOUCHED_CAP
 
     override fun <T : Any?> getCapability(capability: Capability<T>, facing: EnumFacing?): T? =
             if (capability === TOUCHED_CAP) this as T else null
 
+    override fun toString() = despawnHandler?.name?:"none"
 }
 
 private object TouchedStorage: Capability.IStorage<TouchedByLingeringLewd> {
