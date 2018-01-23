@@ -79,7 +79,7 @@ class EventHandler() {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
     fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules?.let {
-        if (item.extractPickupDelay() != INFINITE_PICKUP_DELAY) // ignore cosmetic fake item
+        if (item.extractPickupDelay() != INFINITE_PICKUP_DELAY && !item.item.isEmpty) // ignore cosmetic fake item or empty item
             EvaluationContext(it, item, causeMask).act()
     }
 
