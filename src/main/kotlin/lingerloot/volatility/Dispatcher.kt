@@ -11,14 +11,15 @@ import net.minecraftforge.event.entity.item.ItemExpireEvent
 object DespawnDispatcher {
     fun dispatch(event: ItemExpireEvent) {
         val entityItem = event.entityItem
+        val world = entityItem.entityWorld as? WorldServer ?: return
+        val item = entityItem.item
 
         prescreen.remove(entityItem)
 
-        if (entityItem.item.count <= 0) return
-        val world = entityItem.entityWorld as? WorldServer ?: return
+        if (item.count <= 0) return
 
         entityItem.getCapability(TOUCHED_CAP!!, null)
-                ?.despawnHandler?.handle(world, entityItem, entityItem.item.item, event)
+            ?.despawnHandler?.handle(world, entityItem, item.item, event)
     }
 }
 
@@ -63,6 +64,7 @@ fun scatterRemainderToTheWinds(world: WorldServer, entityItem: EntityItem) {
         .forEach {
             it.jumpAround()
             it.lifespan = 20 + rand.nextInt(3*20) // 1-4 seconds
+            it.getCapability(TOUCHED_CAP!!, null)?.despawnHandler = DespawnHandlerSet.HARDCORE
             world.spawnEntity(it)
         }
 }
