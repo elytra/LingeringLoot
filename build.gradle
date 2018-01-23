@@ -20,7 +20,7 @@ apply plugin: 'kotlin'
 apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
-version = "4.0"
+version = "4.1"
 group = "lingerloot" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "LingeringLoot-1.12.2"
 
