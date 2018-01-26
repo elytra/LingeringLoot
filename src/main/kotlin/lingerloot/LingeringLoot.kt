@@ -28,16 +28,11 @@ import org.apache.logging.log4j.Logger
 import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
-val FAKE_DEFAULT_LIFESPAN = MINECRAFT_LIFESPAN + 1 // for preventing further substitutions
 
 val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDespawnTime(); e.extractAge() + 1}()
-val CREATIVE_GIVE_DISAMBIGUATE = CREATIVE_GIVE_DESPAWN_TICK - 1
-val CREATIVE_LIFESPAN = MINECRAFT_LIFESPAN - CREATIVE_GIVE_DESPAWN_TICK
 
 val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.extractPickupDelay()}()
 val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.extractPickupDelay()}()
-
-val ID_ENTITYITEMEXPLODING = 0
 
 val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
 
@@ -60,7 +55,7 @@ class LingeringLoot {
         MinecraftForge.EVENT_BUS.register(EventHandler)
 
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
-                ID_ENTITYITEMEXPLODING, this, 64, 15, true)
+                0, this, 64, 15, true)
 
         registerCapabilities()
         initMessageContexts()
@@ -76,11 +71,11 @@ class LingeringLoot {
 val prescreen = mutableMapOf<EntityItem, Int>()
 
 object EventHandler {
-    val jitterSluice by lazy { JitterNotificationQueue() }
+    private val jitterSluice by lazy { JitterNotificationQueue() }
 
-    fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules?.let {
+    fun applyRules(item: EntityItem, causeMask: Int) {
         if (item !is EntityItemExploding && item.extractPickupDelay() != INFINITE_PICKUP_DELAY && !item.item.isEmpty) // ignore cosmetic fake item or empty item
-            EvaluationContext(it, item, causeMask).act()
+            LingerRulesEngine.act(EntityItemCTX(item, causeMask))
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

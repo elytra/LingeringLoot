@@ -1,12 +1,14 @@
 package lingerloot.ruleengine
 
+import capitalthree.ruleengine.Effect
+import capitalthree.ruleengine.RulesEngine
+import capitalthree.ruleengine.Predicate
 import com.elytradev.concrete.common.Either
 import lingerloot.DEFAULT_PICKUP_DELAY
 import lingerloot.LegacyRules
-import lingerloot.cfg
-import java.io.*
-import java.util.*
-import java.util.regex.Pattern
+import lingerloot.lookupItem
+import lingerloot.volatility.despawnHandlerSetsByShort
+import net.minecraftforge.oredict.OreDictionary
 
 val documentation = """
 # Hi!  I'm Nikky!  capitalthree kidnapped me and they won't let me go until I explain this stupid new config format to
@@ -96,101 +98,8 @@ val documentation = """
 
 """
 
-val commentPattern = Pattern.compile("#.*")
-val tagnamePattern = Pattern.compile("[A-Za-z]+")
-val arrowPattern = Pattern.compile("->")
-
-class RulesAggregator {
-    val levels = mutableMapOf<Int, RulesLevel>()
-
-    fun add(ctx: ParseContext, level: Int, rule: Scanner): String? =
-            levels.computeIfAbsent(level, {RulesLevel()})
-                    .add(ctx, rule)
-
-    fun addTag(ctx: ParseContext, tagname: String, ln_: Int, line_: Scanner, lines: Iterator<IndexedValue<String>>): String? {
-        if (!line_.hasNext() || line_.next() != "[") return errMessage(ln_, "Expected [ after tag name")
-        if (ctx.tags.contains(tagname)) return errMessage(ln_, "Duplicate tag \"$tagname\"")
-        var ln = ln_
-        var line = line_
-        val predicateses = mutableListOf(Predicates())
-
-        while (true) {
-            while (!line.hasNext()) {
-                if (!lines.hasNext()) return errMessage(ln, "Unexpected EOF, unclosed block for tag \"$tagname\"")
-                val lineIndexed = lines.next()
-                ln = lineIndexed.index + 1
-                line = Scanner(fluffSpecialDelimiters(lineIndexed.value))
-                if (!predicateses.last().isEmpty()) predicateses.add(Predicates())
-            }
-
-            val token = line.next()
-            when (token) {
-                "," -> {
-                    if (!predicateses.last().isEmpty()) predicateses.add(Predicates())
-                }
-                "]" -> {
-                    if (line.hasNext()) return errMessage(ln, "\"]\" must appear at the end of a line")
-                    if (predicateses.last().isEmpty()) predicateses.removeAt(predicateses.size-1)
-                    if (predicateses.isEmpty()) return errMessage(ln, "Tag \"$tagname\" has no predicates")
-                    ctx.tags.put(tagname, predicateses)
-                    return null
-                }
-                else -> {
-                    predicateses.last().add(ctx, token) ?.let{return errMessage(ln, it)}
-                }
-            }
-        }
-    }
-
-    fun getRules() = levels.entries.sortedByDescending{it.key}.flatMap{it.value.rules}
-}
-
-class RulesLevel {
-    val rules = mutableListOf<Rule>()
-
-    fun add(ctx: ParseContext, s: Scanner): String? {
-        val rule = Rule()
-        rules.add(rule)
-
-        while (!s.hasNext(arrowPattern)) {
-            if (!s.hasNext()) return "No arrow (\"->\") in rule line"
-            rule.addPredicate(ctx, s.next()) ?.let{return it}
-        }
-        s.next()
-
-        while (s.hasNext())
-            rule.addEffect(s.next()) ?.let{return it}
-        if (rule.effects.isEmpty()) return "No effects for rule"
-
-        return null
-    }
-}
-
-typealias Rules = Iterable<Rule>
-
-class Rule {
-    val predicates = Predicates()
-    val effects = mutableListOf<Effect>()
-
-    fun addPredicate(ctx: ParseContext, s: String): String? = predicates.add(ctx, s)
-
-    fun addEffect(s: String): String? = effect(s).map(
-            {
-                effects.addAll(it)
-                null
-            },
-            {it}
-    )
-}
-
-fun errMessage(ln: Int, m: String) = "Error on line $ln: $m"
-fun errEither(s: String) = Either.right<Rules, String>(s)
 
 
-class ParseContext {
-    val tags = mutableMapOf<String, List<Predicates>>()
-    val predicateCache = mutableMapOf<String, Predicate>()
-}
 
 fun generateDefaultRules(legacyRules: LegacyRules): String {
     val builder = StringBuilder(documentation)
@@ -258,47 +167,85 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
     return builder.toString()
 }
 
-fun parseRules(fileInput: File): Either<Rules, String> {
-    if (!fileInput.exists())
-        fileInput.writeText(generateDefaultRules(cfg!!.legacyRules))
 
-    val rules = RulesAggregator()
-    val ctx = ParseContext()
-
-    fileInput.useLines {
-        val lines = it.withIndex().iterator()
-
-        while (lines.hasNext()) {
-            val lineIndexed = lines.next()
-            val line = Scanner(fluffSpecialDelimiters(lineIndexed.value))
-            if (!line.hasNext(commentPattern) && line.hasNext()) {
-                val lineNumber = lineIndexed.index + 1
-
-                if (line.hasNextInt()) {
-                    rules.add(ctx, line.nextInt(), line)
-                            ?.let {return errEither(errMessage(lineNumber, it)) }
-                } else {
-                    if (line.hasNext(tagnamePattern)) {
-                        rules.addTag(ctx, line.next(), lineNumber, line, lines)
-                            ?.let {return errEither(it)}
-                    } else {
-                        return errEither(errMessage(lineNumber, "illegal tag name: ${line.next()} (tag name must be purely alphanumeric)"))
-                    }
-                }
-            }
+val _domainPredicates = mapOf<Char, (String) -> Either<Predicate<EntityItemCTX>, String>>(
+        '$' to { oredictName ->
+            if (OreDictionary.doesOreNameExist(oredictName))
+                Either.left(OredictPredicate(OreDictionary.getOreID(oredictName)))
+            else Either.right("Invalid oredict name: \"$oredictName\"")
+        },
+        '&' to { className ->
+            val pred = classPredicatesByName[className.toUpperCase()]
+            if (pred != null) Either.left(pred)
+            else Either.right("Unknown class: \"$className\"")
+        },
+        ':' to { modId ->
+            if (modId.isNotEmpty()) Either.left(ModIdPredicate(modId))
+            else Either.right("Empty mod id")
+        },
+        '@' to { causeName ->
+            val pred = causePredicatesByName[causeName.toUpperCase()]
+            if (pred != null) Either.left(pred)
+            else Either.right("Unknown cause: \"$causeName\"")
         }
-    }
-
-    ctx.predicateCache.values.filterIsInstance<TagPredicate>().forEach({
-        val tag = ctx.tags[it.name] ?: return errEither("Tag referenced but never defined: \"${it.name}\"")
-        it.predicateses = tag
-    })
-
-    return Either.left(rules.getRules())
-}
-
-val specialDelimiters = Regex("[\\[\\],]") // these characters get automatically surrounded with spaces
-private fun fluffSpecialDelimiters(s: String): String = s.replace(specialDelimiters,
-        {match -> " ${match.value} "}
 )
 
+object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
+    override fun getEffectSlots() = expectedEffectTypes
+
+    override fun getDomainPredicates() = _domainPredicates
+    override fun unprefixedPredicate(s: String) = lookupItem(s)
+
+    override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim")
+    override fun genInterestingNumbers(from: EntityItemCTX): DoubleArray { val item = from.item
+        return doubleArrayOf(item.posX, item.posY, item.posZ, item.brightness.toDouble(), item.dimension.toDouble())
+    }
+
+    override fun effect(s: String): Either<Iterable<out Effect<EntityItemCTX>>, String> {
+        val word = s.takeWhile{it != '('}
+        val param = if (word.length < s.length)
+            if (s.last() == ')')
+                s.substring(word.length+1, s.length-1)
+            else
+                return Either.right("Effect \"$s\" has '(' but doesn't end with ')'")
+        else
+            null
+
+        return Either.left<Iterable<out Effect<EntityItemCTX>>, String>(when (word) {
+            "timer" -> {listOf(if (param == null) {
+                NOTIMER
+            } else {
+                val seconds = param.toDoubleOrNull() ?: return Either.right("Invalid double: \"$param\"")
+                val ticks = (seconds * 20).toInt()
+                TimerEffect(ticks)
+            })}
+
+            "convert" -> {listOf(if (param == null) {
+                NOTF
+            } else {
+                val lookup = lookupItem(param)
+                TransformEffect(
+                        if (lookup.isLeft) lookup.leftNullable
+                        else return Either.right(lookup.rightNullable)
+                )
+            })}
+
+            "pickupdelay" -> {listOf(if (param == null) {
+                NODELAY
+            } else {
+                PickupDelayEffect(param.toIntOrNull()?: return Either.right("Invalid int: \"$param\""))
+            })}
+
+            "despawn" -> {listOf(if (param == null) {
+                NOVOL
+            } else {
+                if (param.length != 1) return Either.right("Despawn handler specifier must be one character")
+                val handlerCode = param[0].toShort()
+                if (handlerCode !in despawnHandlerSetsByShort) return Either.right("Invalid despawn handler code: $param")
+                VolatileEffect(handlerCode)
+            })}
+            "finalize" -> {listOf(NOTIMER, NOVOL, NODELAY, NOTF)}
+            else -> return Either.right("Invalid effect keyword: \"$word\"")
+        })
+    }
+}

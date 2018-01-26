@@ -1,7 +1,8 @@
 package lingerloot
 
-import lingerloot.ruleengine.Rules
-import lingerloot.ruleengine.parseRules
+import capitalthree.ruleengine.RulesEngine
+import com.elytradev.concrete.common.Either
+import lingerloot.ruleengine.*
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.config.Configuration
@@ -11,7 +12,6 @@ var cfg: LingeringLootConfig? = null
 
 class LingeringLootConfig(file: File) {
     val antilag: Boolean
-    var rules: Rules? = null
     private val rulesFile: File
     val legacyRules: LegacyRules
 
@@ -39,10 +39,9 @@ class LingeringLootConfig(file: File) {
         reloadRules().map({logger?.info(it)}, {logger?.error(it)})
     }
 
-    fun reloadRules() = parseRules(rulesFile).mapLeft{
-        rules = it
-        "Loaded ${it.count()} rules."
-    }
+    fun reloadRules(): Either<String, String> = LingerRulesEngine.loadRules(rulesFile, { generateDefaultRules(legacyRules) })
+            ?.let { Either.right<String, String>(it) }
+            ?: Either.left("Loaded ${LingerRulesEngine.count()} rules.")
 }
 
 val bonusCategory = "bonus"
