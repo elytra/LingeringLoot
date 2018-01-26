@@ -26,7 +26,7 @@ fun predicate(ctx: ParseContext, s: String): Either<Predicate, String> = ctx.pre
             ?.let{Either.left<Predicate, String>(it)}
             ?: genPredicate(ctx, s).mapLeft{ctx.predicateCache[s] = it; it}
 
-private fun genPredicate(ctx: ParseContext, s: String): Either<Predicate, String> {
+private fun genPredicate(ctx: ParseContext, s: String): Either<out Predicate, String> {
     when (s[0]) {
         '!' -> {
             if (s.length < 2) return Either.right("Empty subpredicate")
@@ -58,8 +58,10 @@ private fun genPredicate(ctx: ParseContext, s: String): Either<Predicate, String
             if (pred != null) return Either.left(pred)
             return Either.right("Unknown cause: \"$causeName\"")
         }
+//        '(' -> { TODO
+//        }
         else -> {
-            return lookupItem(s).mapLeft{it}
+            return lookupItem(s)
         }
     }
 }

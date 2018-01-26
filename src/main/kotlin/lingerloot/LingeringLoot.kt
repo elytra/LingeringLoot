@@ -57,7 +57,7 @@ class LingeringLoot {
         logger = event.modLog
 
         LingeringLootConfig(event.modConfigurationDirectory)
-        MinecraftForge.EVENT_BUS.register(EventHandler())
+        MinecraftForge.EVENT_BUS.register(EventHandler)
 
         EntityRegistry.registerModEntity(ResourceLocation(MODID, "EntityItemExploding"), EntityItemExploding::class.java, "Exploding Item",
                 ID_ENTITYITEMEXPLODING, this, 64, 15, true)
@@ -75,7 +75,7 @@ class LingeringLoot {
 
 val prescreen = mutableMapOf<EntityItem, Int>()
 
-class EventHandler() {
+object EventHandler {
     val jitterSluice by lazy { JitterNotificationQueue() }
 
     fun applyRules(item: EntityItem, causeMask: Int) = cfg!!.rules?.let {
