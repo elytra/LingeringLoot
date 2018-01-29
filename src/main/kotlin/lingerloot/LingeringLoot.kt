@@ -75,7 +75,7 @@ object EventHandler {
 
     fun applyRules(item: EntityItem, causeMask: Int) {
         if (item !is EntityItemExploding && item.extractPickupDelay() != INFINITE_PICKUP_DELAY && !item.item.isEmpty) // ignore cosmetic fake item or empty item
-            LingerRulesEngine.act(EntityItemCTX(item, causeMask))
+            LingerRulesEngine.act(EntityItemCTX(item, causeMask))?.let{logger?.error(it)}
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

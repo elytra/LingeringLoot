@@ -6,7 +6,7 @@ import java.util.*
 import java.util.regex.Pattern
 
 private val commentPattern = Pattern.compile("#.*")
-private val tagnamePattern = Pattern.compile("[A-Za-z]+")
+private val tagnamePattern = Pattern.compile("[A-Za-z][A-Za-z0-9]+")
 private val specialDelimiters = Regex("[\\[\\],]") // these characters get automatically surrounded with spaces
 private fun fluffSpecialDelimiters(s: String): String = s.replace(specialDelimiters,
         {match -> " ${match.value} "}
@@ -100,8 +100,8 @@ abstract class RulesEngine<X: EvaluationContext> {
 
 
 
-
     private fun evaluate(substrate: X): Either<EffectBuffer<X>, String> {
+        substrate.interestingNumbers = genInterestingNumbers(substrate)
         val buf = EffectBuffer<X>(getEffectSlots())
         try {
             rules?.forEach{
@@ -203,10 +203,9 @@ internal class Rule<X: EvaluationContext> {
 }
 
 abstract class EvaluationContext {
-    val tagCache = mutableMapOf<String, Boolean>()
-    val tagRecursionStack = mutableSetOf<String>()
-    val interestingNumbers by lazy {genInterestingNumbers()}
-    open fun genInterestingNumbers(): DoubleArray = doubleArrayOf()
+    internal val tagCache = mutableMapOf<String, Boolean>()
+    internal val tagRecursionStack = mutableSetOf<String>()
+    internal var interestingNumbers = doubleArrayOf()
 }
 
 

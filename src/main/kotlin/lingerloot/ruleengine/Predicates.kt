@@ -1,8 +1,31 @@
 package lingerloot.ruleengine
 
 import capitalthree.ruleengine.Predicate
+import com.elytradev.concrete.common.Either
 import net.minecraft.item.*
+import net.minecraftforge.oredict.OreDictionary
 
+val lingerlootPredicates = mapOf<Char, (String) -> Either<Predicate<EntityItemCTX>, String>>(
+        '$' to { oredictName ->
+            if (OreDictionary.doesOreNameExist(oredictName))
+                Either.left(OredictPredicate(OreDictionary.getOreID(oredictName)))
+            else Either.right("Invalid oredict name: \"$oredictName\"")
+        },
+        '&' to { className ->
+            val pred = classPredicatesByName[className.toUpperCase()]
+            if (pred != null) Either.left(pred)
+            else Either.right("Unknown class: \"$className\"")
+        },
+        ':' to { modId ->
+            if (modId.isNotEmpty()) Either.left(ModIdPredicate(modId))
+            else Either.right("Empty mod id")
+        },
+        '@' to { causeName ->
+            val pred = causePredicatesByName[causeName.toUpperCase()]
+            if (pred != null) Either.left(pred)
+            else Either.right("Unknown cause: \"$causeName\"")
+        }
+)
 
 enum class CausePredicates(val mask: Int): Predicate<EntityItemCTX> {
     PLAYERDROP(1), PLAYERKILL(2), PLAYERMINE(4), MOBDROP(8),

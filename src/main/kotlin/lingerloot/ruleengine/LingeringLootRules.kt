@@ -168,32 +168,10 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
 }
 
 
-val _domainPredicates = mapOf<Char, (String) -> Either<Predicate<EntityItemCTX>, String>>(
-        '$' to { oredictName ->
-            if (OreDictionary.doesOreNameExist(oredictName))
-                Either.left(OredictPredicate(OreDictionary.getOreID(oredictName)))
-            else Either.right("Invalid oredict name: \"$oredictName\"")
-        },
-        '&' to { className ->
-            val pred = classPredicatesByName[className.toUpperCase()]
-            if (pred != null) Either.left(pred)
-            else Either.right("Unknown class: \"$className\"")
-        },
-        ':' to { modId ->
-            if (modId.isNotEmpty()) Either.left(ModIdPredicate(modId))
-            else Either.right("Empty mod id")
-        },
-        '@' to { causeName ->
-            val pred = causePredicatesByName[causeName.toUpperCase()]
-            if (pred != null) Either.left(pred)
-            else Either.right("Unknown cause: \"$causeName\"")
-        }
-)
-
 object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
     override fun getEffectSlots() = expectedEffectTypes
 
-    override fun getDomainPredicates() = _domainPredicates
+    override fun getDomainPredicates() = lingerlootPredicates
     override fun unprefixedPredicate(s: String) = lookupItem(s)
 
     override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim")
