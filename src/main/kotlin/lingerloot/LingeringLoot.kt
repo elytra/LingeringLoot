@@ -45,7 +45,7 @@ var logger: Logger? = null
 
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
-@Mod(modid = MODID, version = "4.0", acceptableRemoteVersions="*")
+@Mod(modid = MODID, version = "4.2", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
