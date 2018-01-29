@@ -13,6 +13,8 @@ object ReloadRulesCommand: CommandBase() {
     override fun getName() = "llreload"
     override fun getUsage(sender: ICommandSender?) = "/llreload"
 
-    override fun execute(server: MinecraftServer?, sender: ICommandSender?, args: Array<out String>?) =
-            sender?.sendMessage(TextComponentString(cfg!!.reloadRules().map({it}, {it})))?:Unit
+    override fun execute(server: MinecraftServer?, sender: ICommandSender?, args: Array<out String>?) {
+        sender?.sendMessage(TextComponentString(cfg!!.reloadRules().map({ it }, { it })))
+        sender?.sendMessage(TextComponentString(cfg!!.reloadDimRules().map({ it }, { it })))
+    }
 }

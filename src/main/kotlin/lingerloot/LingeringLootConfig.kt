@@ -2,6 +2,7 @@ package lingerloot
 
 import capitalthree.ruleengine.RulesEngine
 import com.elytradev.concrete.common.Either
+import dimensionalforcefield.ForcefieldRules
 import lingerloot.ruleengine.*
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
@@ -13,6 +14,7 @@ var cfg: LingeringLootConfig? = null
 class LingeringLootConfig(file: File) {
     val antilag: Boolean
     private val rulesFile: File
+    private val ffRulesFile: File
     val legacyRules: LegacyRules
 
     init {
@@ -36,12 +38,18 @@ class LingeringLootConfig(file: File) {
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
         rulesFile = file.resolve("lingeringloot.rules")
+        ffRulesFile = file.resolve("dimensionalforcefield.rules")
         reloadRules().map({logger?.info(it)}, {logger?.error(it)})
+        reloadDimRules().map({logger?.info(it)}, {logger?.error(it)})
     }
 
     fun reloadRules(): Either<String, String> = LingerRulesEngine.loadRules(rulesFile, { generateDefaultRules(legacyRules) })
             ?.let { Either.right<String, String>(it) }
             ?: Either.left("Loaded ${LingerRulesEngine.count()} rules.")
+
+    fun reloadDimRules(): Either<String, String> = ForcefieldRules.loadRules(ffRulesFile, {"# Effects: y, n.  Predicates: entity resource names.  Variables: to/from (dim ids), x/y/z"})
+            ?.let { Either.right<String, String>(it) }
+            ?: Either.left("Dimensional Forcefield Loaded ${LingerRulesEngine.count()} rules.")
 }
 
 val bonusCategory = "bonus"
