@@ -28,6 +28,7 @@ val documentation = """
 #  :modid
 #   - Note that these cannot be checked for correctness at rules load time
 #  !negated
+#  (comparison)
 
 # Cause refers to the conditions that caused the item to drop, as in the classic lingering loot config. They are:
 #  @playerDrop
@@ -50,6 +51,12 @@ val documentation = """
 #  &block
 #  &food
 #  &tool
+
+# Comparison predicates let you do numeric comparisons... equality or inequality.  The syntax is simple:
+# (var=000) where var is a variable name and 000 is some constant.  = can be one of the following operators:
+# > < = >= <= !=
+# The variables allowed are: x, y, z, dim, and light, for coordinates, dimension id, and light level respectively.
+# Note that the tailing ')' is just a cosmetic feature that the parser ignores and can be left off.
 
 # Tag predicates must match an actual tag you have... I mean duh... here's how you define a tag:
 # | tagname [predicateA  predB  predC,
