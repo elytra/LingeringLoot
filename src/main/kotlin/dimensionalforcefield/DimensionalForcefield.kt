@@ -1,9 +1,9 @@
 package dimensionalforcefield
 
-import capitalthree.ruleengine.Effect
-import capitalthree.ruleengine.EvaluationContext
-import capitalthree.ruleengine.Predicate
-import capitalthree.ruleengine.RulesEngine
+import com.elytradev.concrete.rulesengine.Effect
+import com.elytradev.concrete.rulesengine.EvaluationContext
+import com.elytradev.concrete.rulesengine.Predicate
+import com.elytradev.concrete.rulesengine.RulesEngine
 import com.elytradev.concrete.common.Either
 import lingerloot.logger
 import net.minecraft.entity.Entity
@@ -12,7 +12,7 @@ import net.minecraftforge.event.entity.EntityTravelToDimensionEvent
 import net.minecraftforge.fml.common.registry.ForgeRegistries
 
 fun handleEvent(e: EntityTravelToDimensionEvent) {
-    ForcefieldRules.act(TeleportCTX(e))?.let{logger?.error("Error in DimensionalForcefield rules eval: $it")}
+    ForcefieldRules.act(TeleportCTX(e))?.let{logger.error("Error in DimensionalForcefield rules eval: $it")}
 }
 
 object ForcefieldRules: RulesEngine<TeleportCTX>() {
@@ -34,6 +34,8 @@ object ForcefieldRules: RulesEngine<TeleportCTX>() {
     override fun interestingNumberList() = interestingNumberList
     override fun genInterestingNumbers(from: TeleportCTX) = doubleArrayOf(from.e.dimension.toDouble(), from.e.entity.dimension.toDouble(),
             from.e.entity.posX, from.e.entity.posY, from.e.entity.posZ)
+
+    override fun genDefaultRules() = "# Effects: y, n.  Predicates: entity resource names.  Variables: to/from (dim ids), x/y/z"
 }
 
 class TeleportCTX(val e: EntityTravelToDimensionEvent): EvaluationContext()

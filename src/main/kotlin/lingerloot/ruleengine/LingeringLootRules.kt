@@ -1,14 +1,13 @@
 package lingerloot.ruleengine
 
-import capitalthree.ruleengine.Effect
-import capitalthree.ruleengine.RulesEngine
-import capitalthree.ruleengine.Predicate
+import com.elytradev.concrete.rulesengine.Effect
+import com.elytradev.concrete.rulesengine.RulesEngine
 import com.elytradev.concrete.common.Either
 import lingerloot.DEFAULT_PICKUP_DELAY
 import lingerloot.LegacyRules
+import lingerloot.cfg
 import lingerloot.lookupItem
 import lingerloot.volatility.despawnHandlerSetsByShort
-import net.minecraftforge.oredict.OreDictionary
 
 val documentation = """
 # Hi!  I'm Nikky!  capitalthree kidnapped me and they won't let me go until I explain this stupid new config format to
@@ -185,6 +184,8 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
     override fun genInterestingNumbers(from: EntityItemCTX): DoubleArray { val item = from.item
         return doubleArrayOf(item.posX, item.posY, item.posZ, item.brightness.toDouble(), item.dimension.toDouble())
     }
+
+    override fun genDefaultRules() = generateDefaultRules(cfg!!.legacyRules)
 
     override fun effect(s: String): Either<Iterable<out Effect<EntityItemCTX>>, String> {
         val word = s.takeWhile{it != '('}

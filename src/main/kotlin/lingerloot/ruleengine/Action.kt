@@ -1,7 +1,7 @@
 package lingerloot.ruleengine
 
-import capitalthree.ruleengine.Effect
-import capitalthree.ruleengine.EvaluationContext
+import com.elytradev.concrete.rulesengine.Effect
+import com.elytradev.concrete.rulesengine.EvaluationContext
 import lingerloot.volatility.despawnHandlerSetsByShort
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemStack

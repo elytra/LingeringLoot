@@ -1,5 +1,6 @@
 package lingerloot
 
+import dimensionalforcefield.ForcefieldRules
 import dimensionalforcefield.handleEvent
 import lingerloot.ruleengine.*
 import lingerloot.volatility.EntityItemExploding
@@ -43,7 +44,7 @@ val JITTER_TIME = 300
 val rand = Random()
 const val MODID = "lingeringloot"
 
-var logger: Logger? = null
+lateinit var logger: Logger
 
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
@@ -66,7 +67,10 @@ class LingeringLoot {
     }
 
     @Mod.EventHandler
-    fun start(e: FMLServerStartingEvent) = e.registerServerCommand(ReloadRulesCommand)
+    fun start(e: FMLServerStartingEvent) {
+        LingerRulesEngine.registerReloadCommand(e, "llreload")
+        ForcefieldRules.registerReloadCommand(e, "dfreload")
+    }
 }
 
 
@@ -77,7 +81,7 @@ object EventHandler {
 
     fun applyRules(item: EntityItem, causeMask: Int) {
         if (item !is EntityItemExploding && item.extractPickupDelay() != INFINITE_PICKUP_DELAY && !item.item.isEmpty) // ignore cosmetic fake item or empty item
-            LingerRulesEngine.act(EntityItemCTX(item, causeMask))?.let{logger?.error(it)}
+            LingerRulesEngine.act(EntityItemCTX(item, causeMask))?.let{logger.error(it)}
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)

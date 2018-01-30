@@ -1,6 +1,6 @@
 package lingerloot.ruleengine
 
-import capitalthree.ruleengine.Predicate
+import com.elytradev.concrete.rulesengine.Predicate
 import com.elytradev.concrete.common.Either
 import net.minecraft.item.*
 import net.minecraftforge.oredict.OreDictionary
