@@ -5,7 +5,7 @@ import net.minecraft.entity.monster.EntitySilverfish
 import net.minecraft.item.ItemFood
 import net.minecraft.world.WorldServer
 
-fun spontaneousGeneration(world: WorldServer, entityItem: EntityItem, type: ItemFood) {
+fun spontaneousGeneration(world: WorldServer, entityItem: EntityItem, type: ItemFood): Boolean {
     val pos = entityItem.position
     for (i in 1..(
             entityItem.item.count
@@ -16,4 +16,5 @@ fun spontaneousGeneration(world: WorldServer, entityItem: EntityItem, type: Item
             world.spawnEntity(entitysilverfish)
             entitysilverfish.spawnExplosionParticle()
     }
+    return true
 }

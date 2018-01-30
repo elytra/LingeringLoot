@@ -21,9 +21,9 @@ import net.minecraftforge.common.util.FakePlayer
 import java.util.*
 
 
-fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlock) {
+fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlock): Boolean {
     if (cfg!!.antilag && rand.nextFloat() < .04) entityItem.item.shrink(1) // slight loss to prevent infinite scenarios
-    if (entityItem.item.count <= 0) return
+    if (entityItem.item.count <= 0) return false
 
     val fakePlayer = FakerPlayer(world, entityItem)
     val pos = if (type.block is BlockFalling) {
@@ -61,6 +61,7 @@ fun placeAndSplitBlock(world: WorldServer, entityItem: EntityItem, type: ItemBlo
     }
 
     scatterRemainderToTheWinds(world, entityItem)
+    return true
 }
 
 fun placeBlock(world: WorldServer, pos: BlockPos, type: ItemBlock, item: ItemStack) {

@@ -38,6 +38,7 @@ import org.apache.logging.log4j.Logger
 import java.io.File
 import java.util.*
 import java.util.function.Consumer
+import java.util.function.Predicate
 
 
 abstract class RulesEngine<X: EvaluationContext> {
@@ -156,10 +157,10 @@ abstract class RulesEngine<X: EvaluationContext> {
     private fun genPredicate(ctx: ParseContext<X>, s: String): Either<out Predicate<X>, String> = when (s[0]) {
         '!' -> {
             if (s.length < 2) Either.right("Empty subpredicate")
-            else predicate(ctx, s.substring(1)).mapLeft{NegatedPredicate<X>(it)}
+            else predicate(ctx, s.substring(1)).mapLeft{NegatedPredicate(it)}
         }
         '%' -> {
-            if (s.length > 1) Either.left(TagPredicate<X>(s.substring(1)))
+            if (s.length > 1) Either.left(TagPredicate(s.substring(1)))
             else Either.right("Empty tagname")
         }
         '(' -> {
@@ -183,7 +184,7 @@ abstract class RulesEngine<X: EvaluationContext> {
         val buf = EffectBuffer<X>(getEffectSlots())
         try {
             rules?.forEach{
-                if (buf.caresAbout(it.effects) && it.predicates.resolve(substrate)) {
+                if (buf.caresAbout(it.effects) && it.predicates.test(substrate)) {
                     buf.update(it.effects)
                     if (buf.full()) return Either.left(buf)
                 }
@@ -197,10 +198,10 @@ abstract class RulesEngine<X: EvaluationContext> {
     /**
      * act applies your currently loaded ruleset to a context.
      * Semantically, the ruleset is evaluated independently for each effect slot.  The highest priority rule providing
-     * an effect with a given slot will take precedence.  Predicate and tag caching behavior is unspecified and
-     * predicates should not have side effects.
+     * an effect with a given slot will take precedence.  Predicate and tag caching and short circuiting behavior is
+     * unspecified and predicates should not have side effects.
      * All predicates are evaluated before any effects are executed.
-     * Should only be used once per context, after you are done populating the context.
+     * act only be used once per context, after you are done populating the context.
      * You can keep your context afterwards for any data populated by Effects.
      */
     fun act(substrate: X): String? = evaluate(substrate).mapLeft { it.accept(substrate) }.rightNullable
@@ -217,13 +218,3 @@ abstract class EvaluationContext {
 interface Effect<X>: Consumer<X> {
     fun getSlot(): Int
 }
-
-
-interface Predicate<X> {
-    fun resolve(ctx: X): Boolean
-}
-
-
-
-
-

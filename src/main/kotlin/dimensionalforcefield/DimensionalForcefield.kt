@@ -2,7 +2,6 @@ package dimensionalforcefield
 
 import com.elytradev.concrete.rulesengine.Effect
 import com.elytradev.concrete.rulesengine.EvaluationContext
-import com.elytradev.concrete.rulesengine.Predicate
 import com.elytradev.concrete.rulesengine.RulesEngine
 import com.elytradev.concrete.common.Either
 import lingerloot.logger
@@ -10,6 +9,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.event.entity.EntityTravelToDimensionEvent
 import net.minecraftforge.fml.common.registry.ForgeRegistries
+import java.util.function.Predicate
 
 fun handleEvent(e: EntityTravelToDimensionEvent) {
     ForcefieldRules.act(TeleportCTX(e))?.let{logger.error("Error in DimensionalForcefield rules eval: $it")}
@@ -41,7 +41,7 @@ object ForcefieldRules: RulesEngine<TeleportCTX>() {
 class TeleportCTX(val e: EntityTravelToDimensionEvent): EvaluationContext()
 
 class EntityClassPredicate(val clazz: Class<out Entity>): Predicate<TeleportCTX> {
-    override fun resolve(ctx: TeleportCTX) = clazz.isInstance(ctx.e.entity)
+    override fun test(ctx: TeleportCTX) = clazz.isInstance(ctx.e.entity)
 }
 
 enum class CanTeleportEffect(val can: Boolean): Effect<TeleportCTX> {

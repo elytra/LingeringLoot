@@ -41,7 +41,6 @@ val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>(
 
 val JITTER_TIME = 300
 
-val rand = Random()
 const val MODID = "lingeringloot"
 
 lateinit var logger: Logger

@@ -34,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 public class Example extends RulesEngine<Example.ExampleContext> {
 

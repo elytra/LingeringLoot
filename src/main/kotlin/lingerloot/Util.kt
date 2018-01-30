@@ -9,6 +9,7 @@ import net.minecraft.util.ResourceLocation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldServer
 import net.minecraftforge.fml.relauncher.ReflectionHelper
+import java.util.*
 
 inline fun <T> MutableIterable<T>.filterInPlace(filter: (T)->Boolean) {
     val it = iterator()
@@ -27,12 +28,10 @@ fun EntityItem.extractAge(): Int { return ageField.get(this) as Int }
 val pickupDelayField by lazy { ReflectionHelper.findField(EntityItem::class.java, "pickupDelay", "field_145804_b") }
 fun EntityItem.extractPickupDelay(): Int { return pickupDelayField.get(this) as Int }
 
-fun splitNumberEvenlyIsh(number: Int, maxSplits: Int): Collection<Int> {
-    val baseSplit = number / maxSplits
-    val remainder = number % maxSplits
-
-    return (1..maxSplits)
-        .map{if (it <= remainder) baseSplit + 1 else baseSplit}
+fun goldenSplit(number: Int): Collection<Int> {
+    val major = number/2
+    val minor = (.618*(number-major)).toInt()
+    return listOf(major, minor, number-major-minor)
         .filter{it > 0}
 }
 
@@ -88,3 +87,5 @@ fun lookupItem(s: String): Either<ItemPredicate, String> {
     val item = Item.REGISTRY.getObject(ResourceLocation(itemName)) ?: return Either.right("Item not found: \"$s\"")
     return Either.left(ItemPredicate(item, damage))
 }
+
+val rand = Random()

@@ -29,6 +29,7 @@
 package com.elytradev.concrete.rulesengine
 
 import com.elytradev.concrete.common.Either
+import java.util.function.Predicate
 
 
 internal class Predicates<X: EvaluationContext> {
@@ -44,7 +45,7 @@ internal class Predicates<X: EvaluationContext> {
 
     fun isEmpty() = predicates.isEmpty()
 
-    fun resolve(ctx: X) = predicates.all{it.resolve(ctx)}
+    fun test(ctx: X) = predicates.all{it.test(ctx)}
 }
 
 
@@ -52,18 +53,18 @@ private val DUMMY_TAG = listOf<Nothing>()
 internal class TagPredicate<X: EvaluationContext>(val name: String): Predicate<X> {
     internal var predicateses: List<Predicates<X>> = DUMMY_TAG // should always be reassigned
 
-    override fun resolve(ctx: X): Boolean = ctx.tagCache.computeIfAbsent(name, {
+    override fun test(ctx: X): Boolean = ctx.tagCache.computeIfAbsent(name, {
         if (ctx.tagRecursionStack.contains(name)) throw Exception("Tag evaluation aborted due to circular reference: " +
                 ctx.tagRecursionStack.joinToString(", "))
         ctx.tagRecursionStack += name
-        val tagResult = predicateses.any({it.resolve(ctx)})
+        val tagResult = predicateses.any({it.test(ctx)})
         ctx.tagRecursionStack -= name
         tagResult
     })
 }
 
 internal class NegatedPredicate<X>(val neg: Predicate<X>): Predicate<X> {
-    override fun resolve(ctx: X) = !neg.resolve(ctx)
+    override fun test(ctx: X) = !neg.test(ctx)
 }
 
 internal fun <X: EvaluationContext> mathPredicate(engine: RulesEngine<X>, s: String): Either<Predicate<X>, String> {
@@ -100,11 +101,11 @@ private val compsByPattern = NumericComparison.values().map { "(.+)${it.symbol}(
 
 
 private class VarEqualPredicate<X: EvaluationContext>(val variable: Int, val constant: Double, val not: Boolean): Predicate<X> {
-    override fun resolve(ctx: X) = (constant == ctx.interestingNumbers[variable]) != not
+    override fun test(ctx: X) = (constant == ctx.interestingNumbers[variable]) != not
 }
 
 private class VarComparePredicate<X: EvaluationContext>(val variable: Int, val constant: Double, val greater: Boolean, val equal: Boolean): Predicate<X> {
-    override fun resolve(ctx: X): Boolean {
+    override fun test(ctx: X): Boolean {
         val value = ctx.interestingNumbers[variable]
         return (equal && (value == constant))
                 || (greater == (value > constant))

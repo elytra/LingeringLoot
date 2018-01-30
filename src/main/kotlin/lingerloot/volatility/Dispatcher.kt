@@ -4,6 +4,7 @@ import lingerloot.*
 import lingerloot.ruleengine.TOUCHED_CAP
 import lingerloot.volatility.handlers.*
 import net.minecraft.entity.item.EntityItem
+import net.minecraft.init.SoundEvents
 import net.minecraft.item.*
 import net.minecraft.world.WorldServer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
@@ -18,14 +19,16 @@ object DespawnDispatcher {
 
         if (item.count <= 0) return
 
-        entityItem.getCapability(TOUCHED_CAP!!, null)
-            ?.despawnHandler?.handle(world, entityItem, item.item, event)
+        val handler = entityItem.getCapability(TOUCHED_CAP!!, null)?.despawnHandler
+        if (handler == null || !handler.handle(world, entityItem, item.item, event)) {
+            entityItem.playSound(SoundEvents.ENTITY_CHICKEN_EGG, 1.0f, (rand.nextFloat() - rand.nextFloat()) * 0.2f + 1.0f)
+        }
     }
 }
 
 enum class DespawnHandlerSet(val code: Char) {
     HARDCORE('H') {
-        override fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent) {
+        override fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent): Boolean =
             when (type) {
                 is ItemArrow -> spamArrows(world, entityItem, type)
                 is ItemBow -> fireBow(world, entityItem, type, event)
@@ -34,10 +37,9 @@ enum class DespawnHandlerSet(val code: Char) {
                 is ItemTool -> toolTime(world, entityItem, type, event)
                 else -> attemptUseStack(world, entityItem, type, event)
             }
-        }
     };
 
-    abstract fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent)
+    abstract fun handle(world: WorldServer, entityItem: EntityItem, type: Item, event: ItemExpireEvent): Boolean
 }
 val despawnHandlerSetsByShort = DespawnHandlerSet.values().map{Pair(it.code.toShort(), it)}.toMap()
 
@@ -57,7 +59,7 @@ fun EntityItem.jumpAround() {
  * (never call this if you cancel the despawn event)
  */
 fun scatterRemainderToTheWinds(world: WorldServer, entityItem: EntityItem) {
-    splitNumberEvenlyIsh(entityItem.item.count, 3)
+    goldenSplit(entityItem.item.count)
         .map{EntityItemExploding(world, entityItem.posX, entityItem.posY, entityItem.posZ,
             {val stack = entityItem.item.copy(); stack.count = it; stack}()
         )}
