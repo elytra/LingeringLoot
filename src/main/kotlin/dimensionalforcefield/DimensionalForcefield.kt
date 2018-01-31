@@ -18,13 +18,13 @@ fun handleEvent(e: EntityTravelToDimensionEvent) {
 object ForcefieldRules: RulesEngine<TeleportCTX>() {
     override fun getDomainPredicates(): Map<Char, (String) -> Either<Predicate<TeleportCTX>, String>> = mapOf()
 
-    override fun unprefixedPredicate(s: String): Either<out Predicate<TeleportCTX>, String> {
+    override fun defaultPredicate(s: String): Either<out Predicate<TeleportCTX>, String> {
         val entEntr = ForgeRegistries.ENTITIES.getValue(ResourceLocation(s))?: return Either.right("Entity not found: \"$s\"")
         return Either.left(EntityClassPredicate(entEntr.entityClass))
     }
 
     override fun getEffectSlots(): Set<Int> = setOf(0)
-    override fun effect(s: String): Either<Iterable<Effect<TeleportCTX>>, String> = when (s) {
+    override fun parseEffect(s: String): Either<Iterable<Effect<TeleportCTX>>, String> = when (s) {
         "y" -> Either.left(listOf(CanTeleportEffect.YES))
         "n" -> Either.left(listOf(CanTeleportEffect.NO))
         else -> Either.right("Only y or n allowed")

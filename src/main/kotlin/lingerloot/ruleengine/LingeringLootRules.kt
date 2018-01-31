@@ -178,7 +178,7 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
     override fun getEffectSlots() = expectedEffectTypes
 
     override fun getDomainPredicates() = lingerlootPredicates
-    override fun unprefixedPredicate(s: String) = lookupItem(s)
+    override fun defaultPredicate(s: String) = lookupItem(s)
 
     override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim")
     override fun genInterestingNumbers(from: EntityItemCTX): DoubleArray { val item = from.item
@@ -187,7 +187,7 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
 
     override fun genDefaultRules() = generateDefaultRules(cfg!!.legacyRules)
 
-    override fun effect(s: String): Either<Iterable<out Effect<EntityItemCTX>>, String> {
+    override fun parseEffect(s: String): Either<Iterable<Effect<EntityItemCTX>>, String> {
         val word = s.takeWhile{it != '('}
         val param = if (word.length < s.length)
             if (s.last() == ')')
@@ -197,7 +197,7 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
         else
             null
 
-        return Either.left<Iterable<out Effect<EntityItemCTX>>, String>(when (word) {
+        return Either.left<Iterable<Effect<EntityItemCTX>>, String>(when (word) {
             "timer" -> {listOf(if (param == null) {
                 NOTIMER
             } else {

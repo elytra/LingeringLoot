@@ -90,7 +90,7 @@ internal class RulesLevel<X: EvaluationContext>(private val engine: RulesEngine<
         s.next()
 
         while (s.hasNext())
-            engine.effect(s.next()).mapLeft { rule.effects.addAll(it) }
+            engine.parseEffect(s.next()).mapLeft { rule.effects.addAll(it) }
                     .rightNullable?.let { return it }
 
         if (rule.effects.isEmpty()) return "No effects for rule"

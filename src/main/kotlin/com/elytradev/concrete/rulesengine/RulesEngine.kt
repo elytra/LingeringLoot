@@ -43,11 +43,11 @@ import java.util.function.Predicate
 
 abstract class RulesEngine<X: EvaluationContext> {
     abstract fun getDomainPredicates(): Map<Char, (String) -> Either<Predicate<X>, String>>
-    open fun unprefixedPredicate(s: String): Either<out Predicate<X>, String> =
+    open fun defaultPredicate(s: String): Either<out Predicate<X>, String> =
             Either.right("Unprefixed predicates unsupported: \"$s\"")
 
     abstract fun getEffectSlots(): Set<Int>
-    abstract fun effect(s: String): Either<Iterable<out Effect<X>>, String>
+    abstract fun parseEffect(s: String): Either<Iterable<Effect<X>>, String>
 
     open fun interestingNumberList(): Iterable<String> = listOf()
     open fun genInterestingNumbers(from: X): DoubleArray = doubleArrayOf()
@@ -156,7 +156,7 @@ abstract class RulesEngine<X: EvaluationContext> {
 
     private fun genPredicate(ctx: ParseContext<X>, s: String): Either<out Predicate<X>, String> = when (s[0]) {
         '!' -> {
-            if (s.length < 2) Either.right("Empty subpredicate")
+            if (s.length < 2) Either.right("Negating nothing")
             else predicate(ctx, s.substring(1)).mapLeft{NegatedPredicate(it)}
         }
         '%' -> {
@@ -169,7 +169,7 @@ abstract class RulesEngine<X: EvaluationContext> {
         else -> {
             getDomainPredicates()[s[0]]
                     ?.let { it(s.substring(1)) }
-                    ?: unprefixedPredicate(s)
+                    ?: defaultPredicate(s)
         }
     }
 
