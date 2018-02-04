@@ -39,7 +39,6 @@ fun detectCreativeGiveSecondTick(item: EntityItem) =
         item.extractAge() == CREATIVE_GIVE_DESPAWN_TICK && item.extractPickupDelay() == 39
 
 fun square(x: Double) = x*x
-fun square(x: Float) = x*x
 
 /**
  * Simplified entity-block collision box checking for entities that are within their block vertically,
