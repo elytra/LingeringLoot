@@ -22,7 +22,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 version = "4.2"
 group = "lingerloot" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "LingeringLoot+DimensionalForcefield-1.12.2"
+archivesBaseName = "LingeringLoot-1.12.2"
 
 minecraft {
     version = "1.12.2-14.23.0.2493"

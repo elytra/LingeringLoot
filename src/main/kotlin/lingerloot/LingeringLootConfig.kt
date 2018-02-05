@@ -1,7 +1,5 @@
 package lingerloot
 
-import com.elytradev.concrete.common.Either
-import dimensionalforcefield.ForcefieldRules
 import lingerloot.ruleengine.*
 import net.minecraft.item.Item
 import net.minecraft.util.ResourceLocation
@@ -35,7 +33,6 @@ class LingeringLootConfig(file: File) {
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
         LingerRulesEngine.loadRulesFile(file.resolve("lingeringloot.rules"), logger)
-        ForcefieldRules.loadRulesFile(file.resolve("dimensionalforcefield.rules"), logger)
     }
 }
 

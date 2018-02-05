@@ -1,7 +1,5 @@
 package lingerloot
 
-import dimensionalforcefield.ForcefieldRules
-import dimensionalforcefield.handleEvent
 import lingerloot.ruleengine.*
 import lingerloot.volatility.EntityItemExploding
 import lingerloot.volatility.DespawnDispatcher
@@ -14,7 +12,6 @@ import net.minecraftforge.common.MinecraftForge
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.AttachCapabilitiesEvent
 import net.minecraftforge.event.entity.EntityJoinWorldEvent
-import net.minecraftforge.event.entity.EntityTravelToDimensionEvent
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 import net.minecraftforge.event.entity.item.ItemTossEvent
 import net.minecraftforge.event.entity.living.LivingDropsEvent
@@ -68,7 +65,6 @@ class LingeringLoot {
     @Mod.EventHandler
     fun start(e: FMLServerStartingEvent) {
         LingerRulesEngine.registerReloadCommand(e, "llreload")
-        ForcefieldRules.registerReloadCommand(e, "dfreload")
     }
 }
 
@@ -159,11 +155,5 @@ object EventHandler {
     @SubscribeEvent
     fun onClientTick(event: TickEvent.ClientTickEvent) {
         if (event.phase == TickEvent.Phase.START) {jitteringItems.filterInPlace{it?.ifAlive() != null}}
-    }
-
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    fun onTeleportAttempt(event: EntityTravelToDimensionEvent) {
-        if (! event.entity.world.isRemote)
-            handleEvent(event)
     }
 }
