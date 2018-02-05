@@ -1,11 +1,9 @@
-package lingerloot.hardcore
+package lingerloot.volatility
 
 import com.mojang.authlib.GameProfile
 import lingerloot.extractAge
 import lingerloot.ifAlive
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.init.Items
-import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemStack
 import net.minecraft.network.EnumPacketDirection
 import net.minecraft.network.NetHandlerPlayServer

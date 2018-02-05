@@ -1,10 +1,10 @@
-package lingerloot.hardcore.handlers
+package lingerloot.volatility.handlers
 
 import lingerloot.LingeringLootConfig
 import lingerloot.blockAreaOfEffectForEntityAirLast
-import lingerloot.hardcore.FakerPlayer
-import lingerloot.hardcore.jumpAround
-import lingerloot.hardcore.scatterRemainderToTheWinds
+import lingerloot.volatility.FakerPlayer
+import lingerloot.volatility.jumpAround
+import lingerloot.volatility.scatterRemainderToTheWinds
 import net.minecraft.block.Block.NULL_AABB
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.item.ItemTool
@@ -13,7 +13,7 @@ import net.minecraft.world.WorldServer
 import net.minecraftforge.common.util.FakePlayer
 import net.minecraftforge.event.entity.item.ItemExpireEvent
 
-fun toolTime(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent) {
+fun toolTime(world: WorldServer, entityItem: EntityItem, type: ItemTool, event: ItemExpireEvent): Boolean {
     val fakePlayer = FakerPlayer(world, entityItem)
 
     // Are entity items supposed to have a cylindrical bounding box?
@@ -27,11 +27,11 @@ fun toolTime(cfg: LingeringLootConfig, world: WorldServer, entityItem: EntityIte
                 extendToolTime(event)
                 entityItem.jumpAround()
             }
-            return
+            return true
         }
     }
 
-    attemptUseStack(cfg, world, entityItem, type, event) // one last chance to do something interesting, for some mod tools
+    return attemptUseStack(world, entityItem, type, event) // one last chance to do something interesting, for some mod tools
 }
 
 fun extendToolTime(event: ItemExpireEvent) {

@@ -20,7 +20,7 @@ class JitterNotificationQueue {
                 if (item.lifespan - item.extractAge() > JITTER_TIME + 10)
                     prepareToDie(item) // not even close, throw it back in
                 else
-                    LAMBDA_NETWORK.send().packet(GONNA_DESPAWN).with("id", item.entityId).toAllWatching(item)
+                    TriggerJitterMessage(item.entityId).sendToAllWatching(item)
             }
         }
     }
