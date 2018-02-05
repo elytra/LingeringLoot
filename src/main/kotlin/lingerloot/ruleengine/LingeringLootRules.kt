@@ -182,7 +182,7 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
 
     override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim")
     override fun genInterestingNumbers(from: EntityItemCTX): DoubleArray { val item = from.item
-        return doubleArrayOf(item.posX, item.posY, item.posZ, item.brightness.toDouble(), item.dimension.toDouble())
+        return doubleArrayOf(item.posX, item.posY, item.posZ, 16.0*item.brightness, item.dimension.toDouble())
     }
 
     override fun genDefaultRules() = generateDefaultRules(cfg!!.legacyRules)
