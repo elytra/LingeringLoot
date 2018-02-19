@@ -51,8 +51,13 @@ val documentation = """
 # Comparison predicates let you do numeric comparisons... equality or inequality.  The syntax is simple:
 # (var=000) where var is a variable name and 000 is some constant.  = can be one of the following operators:
 # > < = >= <= !=
-# The variables allowed are: x, y, z, dim, and light, for coordinates, dimension id, and light level respectively.
 # Note that the tailing ')' is just a cosmetic feature that the parser ignores and can be left off.
+
+# The variables allowed are: x, y, z, dim, light, delay, and timer, for coordinates, dimension id, light level, pickup
+# delay before rules evaluation (in ticks), and despawn timer before rules evaluation (in seconds), respectively.
+# The last two can be used for safety, to avoid tampering with items from other mods that have their own custom behavior.
+# In vanilla, despawn timer will always be 300 (sec), and pickup delay will be 10 (ticks) for most items and 40 for
+# player-thrown items.
 
 # Tag predicates must match an actual tag you have... I mean duh... here's how you define a tag:
 # | tagname [predicateA  predB  predC,
@@ -119,7 +124,11 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
         builder.appendln("]\n")
     }
 
-    builder.append("1 @creativeGive -> ")
+    builder.append("# The safe tag identifies items that have not had their despawn timer or pickup delay changed by other mods\n" +
+            "safe [(timer=300) %vanillaPickupDelay]\n" +
+            "vanillaPickupDelay [(delay=10), (delay=40)]\n\n" +
+
+            "1 @creativeGive -> ")
     if (legacyRules.despawns.creative >= 0) builder.append("timer(${legacyRules.despawns.creative}) ")
     builder.appendln("finalize")
 
@@ -128,43 +137,43 @@ fun generateDefaultRules(legacyRules: LegacyRules): String {
     builder.appendln("-> despawn(H)")
 
     if (legacyRules.despawns.playerDrop >= 0) {
-        builder.appendln("-1 @playerDrop -> timer(${legacyRules.despawns.playerDrop})")
+        builder.appendln("-1 %safe @playerDrop -> timer(${legacyRules.despawns.playerDrop})")
     }
 
     if (crap) {
-        builder.appendln("-2 @playerHarvest %crap -> timer(${legacyRules.despawns.shitTier})")
+        builder.appendln("-2 %safe @playerHarvest %crap -> timer(${legacyRules.despawns.shitTier})")
     }
 
     if (legacyRules.despawns.playerToss >= 0) {
-        builder.appendln("-3 @playerToss -> timer(${legacyRules.despawns.playerToss})")
+        builder.appendln("-3 %safe @playerToss -> timer(${legacyRules.despawns.playerToss})")
     }
 
     if (legacyRules.despawns.playerMine >= 0) {
-        builder.appendln("-3 @playerMine -> timer(${legacyRules.despawns.playerMine})")
+        builder.appendln("-3 %safe @playerMine -> timer(${legacyRules.despawns.playerMine})")
     }
 
     if (legacyRules.despawns.playerKill >= 0) {
-        builder.appendln("-3 @playerKill -> timer(${legacyRules.despawns.playerKill})")
+        builder.appendln("-3 %safe @playerKill -> timer(${legacyRules.despawns.playerKill})")
     }
 
     if (legacyRules.despawns.playerCaused >= 0) {
-        builder.appendln("-5 @playerCaused -> timer(${legacyRules.despawns.playerCaused})")
+        builder.appendln("-5 %safe @playerCaused -> timer(${legacyRules.despawns.playerCaused})")
     }
 
     if (crap) {
-        builder.appendln("-6 %crap -> timer(${legacyRules.despawns.shitTier})")
+        builder.appendln("-6 %safe %crap -> timer(${legacyRules.despawns.shitTier})")
     }
 
     if (legacyRules.despawns.mobDrop >= 0) {
-        builder.appendln("-7 @mobDrop -> timer(${legacyRules.despawns.mobDrop})")
+        builder.appendln("-7 %safe @mobDrop -> timer(${legacyRules.despawns.mobDrop})")
     }
 
     if (legacyRules.despawns.other >= 0) {
-        builder.appendln("-8 -> timer(${legacyRules.despawns.other})")
+        builder.appendln("-8 %safe -> timer(${legacyRules.despawns.other})")
     }
 
     if (legacyRules.minedPickupDelay != DEFAULT_PICKUP_DELAY) {
-        builder.appendln("-9 @playerMine -> pickupdelay(${legacyRules.minedPickupDelay})")
+        builder.appendln("-9 %safe @playerMine -> pickupdelay(${legacyRules.minedPickupDelay})")
     }
 
     return builder.toString()
