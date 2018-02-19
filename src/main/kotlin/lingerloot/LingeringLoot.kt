@@ -144,16 +144,17 @@ object EventHandler {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     fun onServerTick(event: TickEvent.ServerTickEvent) {
         if (event.phase == TickEvent.Phase.START) {
-            prescreen.forEach { item, causemask ->
-                val causemaskCreative = if (detectCreativeGiveSecondTick(item))
+            val dump = prescreen.entries.toTypedArray()
+            prescreen.clear()
+            dump.forEach { entry ->
+                val causemaskCreative = if (detectCreativeGiveSecondTick(entry.key))
                     CausePredicates.CREATIVEGIVE.mask
                 else
-                    causemask
+                    entry.value
 
-                applyRules(item, causemaskCreative)
-                jitterSluice.prepareToDie(item)
+                applyRules(entry.key, causemaskCreative)
+                jitterSluice.prepareToDie(entry.key)
             }
-            prescreen.clear()
             jitterSluice.tick()
         }
     }
