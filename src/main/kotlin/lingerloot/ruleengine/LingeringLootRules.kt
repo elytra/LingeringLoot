@@ -209,8 +209,8 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
             } else {
                 val lookup = lookupItem(param)
                 TransformEffect(
-                        if (lookup.isLeft) lookup.leftNullable
-                        else return Either.right(lookup.rightNullable)
+                        lookup.leftNullable ?:
+                        return Either.right(lookup.rightNullable)
                 )
             })}
 
