@@ -1,5 +1,6 @@
 package lingerloot
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import lingerloot.ruleengine.*
 import lingerloot.volatility.EntityItemExploding
 import lingerloot.volatility.DespawnDispatcher
@@ -33,6 +34,7 @@ val CREATIVE_GIVE_DESPAWN_TICK = {val e = EntityItem(null); e.setAgeToCreativeDe
 
 val INFINITE_PICKUP_DELAY = {val e = EntityItem(null); e.setInfinitePickupDelay(); e.extractPickupDelay()}()
 val DEFAULT_PICKUP_DELAY = {val e = EntityItem(null); e.setDefaultPickupDelay(); e.extractPickupDelay()}()
+val DROP_PICKUP_DELAY = 40
 
 val jitteringItems = Collections.newSetFromMap(WeakHashMap<EntityItem, Boolean>())
 
@@ -69,14 +71,17 @@ class LingeringLoot {
 }
 
 
-val prescreen = mutableMapOf<EntityItem, Int>()
+val prescreen = Object2IntOpenHashMap<EntityItem>()
 
 object EventHandler {
     private val jitterSluice by lazy { JitterNotificationQueue() }
 
     fun applyRules(item: EntityItem, causeMask: Int) {
-        if (item !is EntityItemExploding && item.extractPickupDelay() != INFINITE_PICKUP_DELAY && !item.item.isEmpty) // ignore cosmetic fake item or empty item
-            LingerRulesEngine.act(EntityItemCTX(item, causeMask))?.let{logger.error(it)}
+        if (item !is EntityItemExploding && item.extractPickupDelay() != INFINITE_PICKUP_DELAY &&
+                !item.item.isEmpty && item.extractAge() == 1) // ignore cosmetic fake item, empty item, or unexpected age
+        {
+            LingerRulesEngine.act(EntityItemCTX(item, causeMask))?.let { logger.error(it) }
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
@@ -89,12 +94,13 @@ object EventHandler {
     fun onLivingDropsEvent(event: LivingDropsEvent) {
         if (event.entity.entityWorld.isRemote) return
 
-        val target = if (event.entityLiving is EntityPlayer)
-                CausePredicates.PLAYERDROP
-            else if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
-                CausePredicates.PLAYERKILL else CausePredicates.MOBDROP
+        var target = CausePredicates.MOBDROP.mask
+        if (event.entityLiving is EntityPlayer)
+            target += CausePredicates.PLAYERDROP.mask
+        if (event.source.immediateSource is EntityPlayer || event.source.trueSource is EntityPlayer)
+            target += CausePredicates.PLAYERKILL.mask
 
-        for (drop in event.drops) prescreen.putIfAbsent(drop, target.mask)
+        for (drop in event.drops) prescreen.putIfAbsent(drop, target)
     }
 
     private var playerHarvested = mutableSetOf<ItemStack>()
