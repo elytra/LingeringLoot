@@ -37,26 +37,6 @@ class FakerPlayer(world: WorldServer, val holding: EntityItem?): FakePlayer(worl
         rotationYaw = rotationYawHead
     }
 
-    var holdingNoEntity: ItemStack? = null
-
-    override fun getHeldItem(hand: EnumHand?): ItemStack = when(hand) {
-        EnumHand.MAIN_HAND -> heldItemMainhand
-        else -> super.getHeldItem(hand)
-    }
-
-    override fun getHeldItemMainhand(): ItemStack = holding?.item
-            ?: holdingNoEntity
-            ?: super.getHeldItemMainhand()
-
-    override fun setHeldItem(hand: EnumHand, stack: ItemStack) = when (hand) {
-        EnumHand.MAIN_HAND ->
-            if (holding == null)
-                holdingNoEntity = stack
-            else
-                holding.item = stack
-        else -> super.setHeldItem(hand, stack)
-    }
-
     fun randomLook() {
         rotationPitch = -(rand.nextDouble() * 90).toFloat()
         rotationYawHead = (rand.nextDouble() * 360).toFloat()
