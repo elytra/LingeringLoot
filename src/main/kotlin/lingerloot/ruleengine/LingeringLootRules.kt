@@ -3,10 +3,7 @@ package lingerloot.ruleengine
 import com.elytradev.concrete.rulesengine.Effect
 import com.elytradev.concrete.rulesengine.RulesEngine
 import com.elytradev.concrete.common.Either
-import lingerloot.DEFAULT_PICKUP_DELAY
-import lingerloot.LegacyRules
-import lingerloot.cfg
-import lingerloot.lookupItem
+import lingerloot.*
 import lingerloot.volatility.despawnHandlerSetsByShort
 
 val documentation = """
@@ -180,9 +177,10 @@ object LingerRulesEngine : RulesEngine<EntityItemCTX>() {
     override fun getDomainPredicates() = lingerlootPredicates
     override fun defaultPredicate(s: String) = lookupItem(s)
 
-    override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim")
+    override fun interestingNumberList() = listOf("x", "y", "z", "light", "dim", "delay", "timer")
     override fun genInterestingNumbers(from: EntityItemCTX): DoubleArray { val item = from.item
-        return doubleArrayOf(item.posX, item.posY, item.posZ, 16.0*item.brightness, item.dimension.toDouble())
+        return doubleArrayOf(item.posX, item.posY, item.posZ, 16.0*item.brightness, item.dimension.toDouble(),
+                item.extractPickupDelay() + 1.0, item.lifespan/20.0)
     }
 
     override fun genDefaultRules() = generateDefaultRules(cfg!!.legacyRules)
