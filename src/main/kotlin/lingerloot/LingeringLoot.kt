@@ -107,7 +107,7 @@ object EventHandler {
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     fun onHarvestDrops(event: HarvestDropsEvent) {
-        if (! (event.harvester?.entityWorld?.isRemote?:true))
+        if (event.harvester?.entityWorld?.isRemote == false)
             if (event.harvester != null && event.harvester !is FakePlayer)
                 playerHarvested = event.drops.toMutableSet()
     }
