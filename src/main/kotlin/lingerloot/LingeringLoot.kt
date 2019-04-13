@@ -49,7 +49,7 @@ lateinit var rulesFile: File
 
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
-@Mod(modid = MODID, version = "4.3", acceptableRemoteVersions="*")
+@Mod(modid = MODID, version = "4.4", acceptableRemoteVersions="*")
 class LingeringLoot {
     @Mod.EventHandler
     fun preInit (event: FMLPreInitializationEvent) {
