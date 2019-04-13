@@ -8,12 +8,12 @@ import java.io.File
 
 var cfg: LingeringLootConfig? = null
 
-class LingeringLootConfig(file: File) {
+class LingeringLootConfig(configDir: File) {
     val antilag: Boolean
     val legacyRules: LegacyRules
 
     init {
-        val config = Configuration(file.resolve("lingeringloot.cfg"))
+        val config = Configuration(configDir.resolve("lingeringloot.cfg"))
 
         config.setCategoryComment(bonusCategory,
                 "Despawn times are in seconds.  Minecraft's default is 300.  Use -1 to defer to less granular settings\n" +
@@ -32,7 +32,6 @@ class LingeringLootConfig(file: File) {
         legacyRules = LegacyRules(config)
         // rules parsing last so we can avoid saving in default values for defunct options when
         // attempting to migrate config
-        LingerRulesEngine.loadRulesFile(file.resolve("lingeringloot.rules"), logger)
     }
 }
 

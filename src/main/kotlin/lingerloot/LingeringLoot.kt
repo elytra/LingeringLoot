@@ -19,6 +19,7 @@ import net.minecraftforge.event.entity.living.LivingDropsEvent
 import net.minecraftforge.event.world.BlockEvent.HarvestDropsEvent
 import net.minecraftforge.fml.common.Mod
 import net.minecraftforge.fml.common.SidedProxy
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent
 import net.minecraftforge.fml.common.eventhandler.EventPriority
@@ -26,6 +27,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent
 import net.minecraftforge.fml.common.gameevent.TickEvent
 import net.minecraftforge.fml.common.registry.EntityRegistry
 import org.apache.logging.log4j.Logger
+import java.io.File
 import java.util.*
 
 val MINECRAFT_LIFESPAN = EntityItem(null).lifespan // must match minecraft's default
@@ -43,6 +45,7 @@ val JITTER_TIME = 300
 const val MODID = "lingeringloot"
 
 lateinit var logger: Logger
+lateinit var rulesFile: File
 
 @SidedProxy(clientSide = "lingerloot.ClientProxy", serverSide = "lingerloot.ServerProxy") var proxy: CommonProxy? = null
 
@@ -52,6 +55,7 @@ class LingeringLoot {
     fun preInit (event: FMLPreInitializationEvent) {
         logger = event.modLog
 
+        rulesFile = event.modConfigurationDirectory.resolve("lingeringloot.rules")
         LingeringLootConfig(event.modConfigurationDirectory)
         MinecraftForge.EVENT_BUS.register(EventHandler)
 
@@ -62,6 +66,11 @@ class LingeringLoot {
         initMessageContexts()
 
         proxy?.preInit(event)
+    }
+
+    @Mod.EventHandler
+    fun postInit (event: FMLPostInitializationEvent) {
+        LingerRulesEngine.loadRulesFile(rulesFile, logger)
     }
 
     @Mod.EventHandler
